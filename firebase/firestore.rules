@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Who can do what:
+//  - The senior's phone (owner) controls its own device document and everything under it.
+//  - A family member joins by presenting a valid, unexpired pair code.
+//  - Family members can always read; they can edit contacts/medicines only on unlocked phones.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function dev(deviceId) { return get(/databases/$(database)/documents/devices/$(deviceId)).data; }
+    function isOwner(deviceId) { return signedIn() && dev(deviceId).ownerUid == request.auth.uid; }
+    function isFamily(deviceId) { return signedIn() && request.auth.uid in dev(deviceId).family; }
+    function pairCode(code) { return get(/databases/$(database)/documents/pairCodes/$(code)).data; }
+
+    match /devices/{deviceId} {
+      // resource == null: the senior's phone checks whether its (random-id) document exists yet.
+      allow read: if signedIn()
+        && (resource == null
+          || resource.data.ownerUid == request.auth.uid
+          || request.auth.uid in resource.data.family);
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.family == [];
+
+      allow update: if
+        // 1. The senior's own phone: anything except changing the owner.
+        (signedIn()
+          && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid)
+        // 2. A family member adding only themselves, with a valid code for this phone.
+        || (signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['family', 'lastPairCode'])
+          && request.resource.data.family.toSet().difference(resource.data.family.toSet()) == [request.auth.uid].toSet()
+          && resource.data.family.toSet().difference(request.resource.data.family.toSet()).size() == 0
+          && pairCode(request.resource.data.lastPairCode).deviceId == deviceId
+          && pairCode(request.resource.data.lastPairCode).expiresAt > request.time)
+        // 3. A linked family member unlocking the phone after buying.
+        //    TODO before scale: verify the purchase token server-side (Play Developer API).
+        || (signedIn()
+          && request.auth.uid in resource.data.family
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['premium'])
+          && request.resource.data.premium == true);
+
+      match /contacts/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow write: if isOwner(deviceId) || (isFamily(deviceId) && dev(deviceId).premium == true);
+      }
+      match /medicines/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow write: if isOwner(deviceId) || (isFamily(deviceId) && dev(deviceId).premium == true);
+      }
+      match /events/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow create: if isOwner(deviceId);
+      }
+    }
+
+    // Codes can be fetched by exact id only (no listing), so they can't be enumerated.
+    match /pairCodes/{code} {
+      allow get: if signedIn();
+      allow create: if signedIn() && isOwner(request.resource.data.deviceId);
+    }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}

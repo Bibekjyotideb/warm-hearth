@@ -1,0 +1,9 @@
+{
+  "name": "play-aso-scorer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "google-play-scraper": "^10.1.4",
+    "global-agent": "^3.0.0"
+  }
+}

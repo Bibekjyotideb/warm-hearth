@@ -1,0 +1,18 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+# Firebase config is project-specific; download your own (see README)
+app/google-services.json
+firebase/functions/node_modules/
+firebase/.firebase/
+tools/play-aso/node_modules/
+tools/play-aso/out/

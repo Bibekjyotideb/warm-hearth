@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "country": "us",
+    "lang": "en",
+    "expandSuggest": true,
+    "maxKeywordsPerIdea": 40
+  },
+  "ideas": {
+    "seniors": ["senior launcher", "easy phone for elderly", "big icons launcher", "simple launcher"],
+    "digital_detox": ["digital detox", "phone addiction", "screen time for adults", "app blocker"],
+    "service_biz": ["pet sitter app", "detailing invoice", "cleaning business app", "dog walker app"],
+    "gig_driver": ["mileage tracker", "uber driver earnings", "rideshare expense", "gig driver tax"],
+    "exam_prep": ["nclex", "comptia security+", "cfa level 1", "real estate exam"],
+    "adhd_routine": ["adhd planner", "adhd routine", "adhd habit tracker", "adhd timer"]
+  }
+}

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WarmHearth</string>
+
+    <!-- General -->
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="allow">Allow</string>
+    <string name="settings">Settings</string>
+    <string name="try_again">Try again</string>
+    <string name="no_internet">No internet connection. Please try again.</string>
+    <string name="app_not_found">This app is not on the phone.</string>
+    <string name="channel_alerts">Alerts and reminders</string>
+    <string name="channel_service">Fall detection running</string>
+    <string name="your_family_member">Your family member</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">Welcome to WarmHearth</string>
+    <string name="welcome_question">Who will use this phone?</string>
+    <string name="mode_senior">Set up this phone for a senior</string>
+    <string name="mode_family">I\'m a family member</string>
+    <string name="mode_family_hint">Choose this on your own phone to manage your parent\'s phone from far away and get SOS alerts.</string>
+    <string name="setup_title">Set up</string>
+    <string name="setup_helper_note">Best done by a family member, together with the senior.</string>
+    <string name="senior_name_label">Senior\'s name (optional)</string>
+    <string name="pin_label">Settings PIN (4–6 digits)</string>
+    <string name="pin_hint">Keeps settings safe from accidental taps. Write it down.</string>
+    <string name="permissions_title">A few permissions</string>
+    <string name="permissions_body">WarmHearth needs to make calls, know the location for SOS, and show reminders. Tap Allow on each question.</string>
+    <string name="set_home_title">Make WarmHearth the home screen</string>
+    <string name="set_home_body">So the big, simple screen appears every time the Home button is pressed. You can switch back any time in Settings.</string>
+    <string name="set_home_button">Make it the home screen</string>
+
+    <!-- Home -->
+    <string name="hello_name">Hello, %1$s</string>
+    <string name="tile_phone">Phone</string>
+    <string name="tile_contacts">People</string>
+    <string name="tile_messages">Messages</string>
+    <string name="tile_camera">Camera</string>
+    <string name="tile_photos">Photos</string>
+    <string name="tile_whatsapp">WhatsApp</string>
+    <string name="tile_meds">Medicines</string>
+    <string name="tile_apps">All apps</string>
+    <string name="tile_scam">Is it a scam?</string>
+    <string name="tile_read">Read it to me</string>
+    <string name="speak">Speak</string>
+    <string name="sos_help">SOS Help</string>
+    <string name="voice_not_understood">Sorry, I didn\'t understand</string>
+    <string name="voice_examples">I heard: "%1$s".\n\nTry saying:\n• "Call Asha"\n• "Open WhatsApp"\n• "Medicine"\n• "Help"</string>
+
+    <!-- Calls & people -->
+    <string name="call_question">Call %1$s?</string>
+    <string name="call_yes">Yes, call</string>
+    <string name="call_no">No</string>
+    <string name="call_now">Call</string>
+    <string name="call_name">Call %1$s</string>
+    <string name="contacts_empty">No people yet. Ask your family to add them in Settings.</string>
+    <string name="edit_contacts">People</string>
+    <string name="add_from_phonebook">Add from phone contacts</string>
+    <string name="add_new_person">Add a person</string>
+    <string name="free_contact_limit">Free version: up to %1$d people. Unlock for unlimited.</string>
+    <string name="emergency_contact">Emergency contact</string>
+    <string name="emergency_contact_toggle">Call this person on SOS</string>
+    <string name="person">Person</string>
+    <string name="name">Name</string>
+    <string name="phone_number">Phone number</string>
+    <string name="choose_photo">Choose photo</string>
+
+    <!-- SOS -->
+    <string name="sos_title">SOS</string>
+    <string name="sos_hold_instruction">Press and hold the red button for 3 seconds</string>
+    <string name="sos_sending">Getting help…</string>
+    <string name="sos_done_family">Your family has been alerted with your location. Calling now.</string>
+    <string name="sos_done_no_family">Calling your emergency contact now.</string>
+    <string name="sos_send_sms">Send my location by SMS</string>
+    <string name="call_emergency">Call emergency %1$s</string>
+    <string name="sos_sms_body">I need help. This is my location:</string>
+    <string name="sos_family_button">%1$s pressed SOS and needs help.</string>
+    <string name="sos_family_fall">%1$s may have fallen and did not answer.</string>
+
+    <!-- Fall detection -->
+    <string name="fall_detection">Fall detection</string>
+    <string name="fall_detection_body">If the phone senses a fall and nobody answers in 30 seconds, SOS starts. A helper, not a medical device.</string>
+    <string name="fall_question">Did you fall?</string>
+    <string name="fall_countdown">Calling for help in %1$d seconds</string>
+    <string name="fall_notification_text">Tap to answer. Help will be called if you don\'t.</string>
+    <string name="im_ok">I\'m OK</string>
+    <string name="get_help_now">Get help now</string>
+    <string name="fall_service_title">Fall detection is on</string>
+    <string name="fall_service_text">WarmHearth is watching for falls</string>
+
+    <!-- Medicines -->
+    <string name="med_time_title">Time for your medicine</string>
+    <string name="med_time_text">%1$s at %2$s</string>
+    <string name="i_took_it">I took it</string>
+    <string name="taken">Taken</string>
+    <string name="remind_10_min">Remind me in 10 minutes</string>
+    <string name="meds_empty">No medicines yet. Your family can add them in Settings.</string>
+    <string name="edit_medicines">Medicines</string>
+    <string name="add_medicine">Add a medicine</string>
+    <string name="scan_medicine">Scan medicine box (AI)</string>
+    <string name="scan_failed">Couldn\'t read the box. Please type the name.</string>
+    <string name="medicine">Medicine</string>
+    <string name="medicine_name">Medicine name</string>
+    <string name="dose_hint">Dose (e.g. 1 tablet)</string>
+    <string name="photo_of_pill">Photo of the medicine</string>
+    <string name="times_per_day">Times each day</string>
+    <string name="add_time">Add a time</string>
+    <string name="family_missed_dose">%1$s has not taken %2$s (due at %3$s).</string>
+
+    <!-- AI -->
+    <string name="scam_intro">Got a strange message? Paste it here and WarmHearth will tell you if it\'s safe.</string>
+    <string name="scam_placeholder">The message…</string>
+    <string name="paste_message">Paste the message</string>
+    <string name="check_message">Check it</string>
+    <string name="scam_tip_share">Tip: in WhatsApp or Messages, long-press a message, tap Share, then WarmHearth.</string>
+    <string name="share_check_scam">Check for scam</string>
+    <string name="verdict_scam">This is a scam</string>
+    <string name="verdict_suspicious">Be careful</string>
+    <string name="verdict_safe">Looks safe</string>
+    <string name="read_aloud">Read aloud</string>
+    <string name="read_intro">Take a photo of a letter, bill or notice. WarmHearth will explain it in simple words.</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="ai_thinking">Reading…</string>
+    <string name="ai_failed">Couldn\'t check right now. Check the internet and try again.</string>
+    <string name="ai_disclaimer">Answers come from AI and can be wrong. For money, health or legal matters, ask your family.</string>
+    <string name="report_answer">Report a wrong answer</string>
+
+    <!-- Settings -->
+    <string name="enter_pin">Enter PIN</string>
+    <string name="wrong_pin">Wrong PIN</string>
+    <string name="pin_for_family">Settings are for family members.</string>
+    <string name="home_tiles">Home screen buttons</string>
+    <string name="add_app_tiles">Add any app as a button</string>
+    <string name="text_size">Text size</string>
+    <string name="size_large">Large</string>
+    <string name="size_xl">Extra large</string>
+    <string name="size_huge">Huge</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="leave_launcher">Switch to the old home screen</string>
+    <string name="allow_exact_alarms">Allow on-time medicine alarms</string>
+    <string name="allow_full_screen">Allow full-screen alerts</string>
+
+    <!-- Family -->
+    <string name="link_family">Link a family member\'s phone</string>
+    <string name="family_linked">Family linked</string>
+    <string name="family_linked_body">✓ A family member is linked to this phone.</string>
+    <string name="pair_instructions">On your family member\'s phone: install WarmHearth, choose "I\'m a family member", tap "Link a phone" and type this code:</string>
+    <string name="pair_code_expiry">The code works for 30 minutes.</string>
+    <string name="new_code">Get a new code</string>
+    <string name="family_title">Your family</string>
+    <string name="family_empty">No phones linked yet. On your parent\'s phone open Settings → Link a family member\'s phone to get a code.</string>
+    <string name="link_a_phone">Link a phone</string>
+    <string name="enter_code_hint">Type the 8-letter code shown on your parent\'s phone.</string>
+    <string name="link">Link</string>
+    <string name="bad_code">That code is wrong or has expired. Get a new one.</string>
+    <string name="unnamed_phone">Parent\'s phone</string>
+    <string name="free_plan">Free</string>
+    <string name="tab_alerts">Alerts</string>
+    <string name="tab_people">People</string>
+    <string name="tab_medicines">Medicines</string>
+    <string name="no_alerts">No alerts. All is well.</string>
+    <string name="tap_for_map">tap for map</string>
+    <string name="unlock_for_phone">Unlock this phone</string>
+    <string name="remote_needs_premium">Editing people and medicines from your phone, missed-medicine alerts and fall detection are part of the one-time unlock. SOS alerts are always free.</string>
+    <string name="switch_to_senior_mode">Set up this phone for a senior instead</string>
+
+    <!-- Paywall -->
+    <string name="unlock_everything">Unlock everything</string>
+    <string name="premium_active">✓ Unlocked forever</string>
+    <string name="paywall_pitch">Pay once. Yours forever. No subscription.</string>
+    <string name="benefit_family">Manage the phone from your own phone</string>
+    <string name="benefit_meds">Medicine reminders with missed-dose alerts</string>
+    <string name="benefit_fall">Fall detection</string>
+    <string name="benefit_contacts">Unlimited people, AI reading and scam checks</string>
+    <string name="benefit_forever">One payment, every future update</string>
+    <string name="buy">Unlock</string>
+    <string name="buy_for">Unlock for %1$s</string>
+    <string name="restore_purchase">Already bought? Restore</string>
+    <string name="purchase_error">The purchase didn\'t go through. Please try again.</string>
+    <string name="paywall_fine_print">Paid through Google Play. Works on every phone signed in to the same Google account.</string>
+</resources>
