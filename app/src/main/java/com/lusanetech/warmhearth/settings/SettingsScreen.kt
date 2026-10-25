@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SupportAgent
+import com.lusanetech.warmhearth.BuildConfig
+import com.lusanetech.warmhearth.util.Links
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +70,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var changingPin by remember { mutableStateOf(false) }
+    var confirmWipe by remember { mutableStateOf(false) }
     val homeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     Page(stringResource(R.string.settings), onBack = onBack) {
@@ -139,6 +143,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
                 }
             }
 
+            BigButton(stringResource(R.string.help_support), icon = Icons.Filled.SupportAgent, color = Palette.Blue) { onOpen(Screen.SUPPORT) }
             BigButton(stringResource(R.string.change_pin), icon = Icons.Filled.Lock, color = Palette.Grey) { changingPin = true }
             if (!HomeRole.isDefault(context)) {
                 BigButton(stringResource(R.string.set_home_button), icon = Icons.Filled.Home) { homeLauncher.launch(HomeRole.requestIntent(context)) }
@@ -146,8 +151,38 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
             BigButton(stringResource(R.string.leave_launcher), icon = Icons.Filled.ExitToApp, color = Palette.Grey) {
                 HomeRole.openHomeSettings(context)
             }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { Links.open(context, "/privacy") }) { Text(stringResource(R.string.privacy_policy)) }
+                TextButton(onClick = { Links.open(context, "/terms") }) { Text(stringResource(R.string.terms)) }
+            }
+            TextButton(onClick = { confirmWipe = true }) { Text(stringResource(R.string.delete_phone_data), color = Palette.Red) }
+            Text("WarmHearth ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft)
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (confirmWipe) {
+        var busy by remember { mutableStateOf(false) }
+        var failed by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!busy) confirmWipe = false },
+            title = { Text(stringResource(R.string.delete_phone_data)) },
+            text = { Text(stringResource(if (failed) R.string.no_internet else R.string.delete_phone_body)) },
+            confirmButton = {
+                TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    context.graph.scope.launch {
+                        if (context.graph.family.deleteMyAccount()) {
+                            FallDetectionService.stop(context)
+                            context.graph.db.medicines().getActive().forEach { context.graph.scheduler.cancel(it) }
+                            context.graph.db.clearAllTables()
+                            context.graph.prefs.clearAll()
+                        } else { failed = true; busy = false }
+                    }
+                }) { Text(stringResource(R.string.delete_forever), color = Palette.Red) }
+            },
+            dismissButton = { TextButton(enabled = !busy, onClick = { confirmWipe = false }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 
     if (changingPin) {

@@ -1,0 +1,37 @@
+<article class="prose">
+<div class="wrap">
+<h1>How can we help?</h1>
+<p>Most answers are below. If not, send us a message: we usually reply within 24 hours, Monday to Saturday (India time).</p>
+
+<h2>Quick fixes</h2>
+<div class="faq">
+<details><summary>The medicine alarm didn't ring</summary><p>On the senior's phone open Settings (PIN) and tap <strong>Allow on-time medicine alarms</strong> and <strong>Allow full-screen alerts</strong> if you see them. On Xiaomi, Redmi, Realme, Oppo and Vivo phones also turn off battery saving for WarmHearth: long-press the WarmHearth icon → App info → Battery → No restrictions.</p></details>
+<details><summary>I didn't get an SOS alert</summary><p>Check that your phone is linked (it should be listed in the app), that notifications are allowed for WarmHearth on your phone, and that the senior's phone has internet. SOS also calls their first emergency contact directly.</p></details>
+<details><summary>The home screen went back to the old one</summary><p>Press the Home button. If Android asks which app to use, choose WarmHearth and "Always". Or open WarmHearth Settings → Make it the home screen.</p></details>
+<details><summary>I forgot the settings PIN</summary><p>Send us a ticket from the family phone that's linked to it; we'll walk you through resetting it.</p></details>
+<details><summary>I bought the unlock but it isn't showing</summary><p>Open the unlock screen and tap <strong>Already bought? Restore</strong>, signed in with the Google account you paid with. Still stuck? Choose "Billing" below and include your order ID (starts with GPA.).</p></details>
+</div>
+
+<h2 id="contact">Send us a message</h2>
+<form class="form" id="ticket-form" novalidate>
+  <label>Your name<input name="name" autocomplete="name" required maxlength="80"></label>
+  <label>Email<input name="email" type="email" autocomplete="email" required maxlength="120"></label>
+  <label>What's it about?
+    <select name="category">
+      <option value="question">A question</option>
+      <option value="problem">Something isn't working</option>
+      <option value="billing">Billing</option>
+      <option value="refund">Refund</option>
+      <option value="feature">An idea</option>
+      <option value="other">Something else</option>
+    </select>
+  </label>
+  <label>Subject<input name="subject" required maxlength="140"></label>
+  <label>Message<textarea name="message" required maxlength="5000" placeholder="What happened, and on which phone (e.g. Redmi Note 12)?"></textarea></label>
+  <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <button class="btn btn-primary" type="submit">Send message</button>
+  <div class="form-status" id="form-status" role="status" hidden></div>
+</form>
+<p class="small muted">Or email <a href="mailto:{{support}}">{{support}}</a> · Billing: <a href="mailto:{{billing}}">{{billing}}</a></p>
+</div>
+</article>

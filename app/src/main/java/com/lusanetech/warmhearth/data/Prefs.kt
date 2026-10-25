@@ -88,4 +88,7 @@ class Prefs(private val context: Context) {
     suspend fun setPremium(value: Boolean) = context.dataStore.edit { it[K.PREMIUM] = value }
     suspend fun setFallDetection(value: Boolean) = context.dataStore.edit { it[K.FALL] = value }
     suspend fun setPaired(value: Boolean) = context.dataStore.edit { it[K.PAIRED] = value }
+
+    /** Used by "Delete this phone's data": back to a fresh install (a new device id is created). */
+    suspend fun clearAll() = context.dataStore.edit { it.clear() }
 }

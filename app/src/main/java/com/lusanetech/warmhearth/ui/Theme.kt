@@ -18,21 +18,22 @@ import androidx.compose.ui.unit.sp
  * Deliberate choices (see .claude/skills/material-3 and accessibility-compliance):
  *  - No dynamic (wallpaper) colour. Seniors need the same colours every day, and every pair
  *    below is checked for WCAG AA contrast (white text on each tile colour is >= 4.5:1).
- *  - Warm off-white background instead of pure white: less glare for ageing eyes.
+ *  - Soft paper background instead of pure white: less glare for ageing eyes.
  *  - Every touch target is at least 72dp (Material minimum is 48dp).
  *  - One spacing scale (8dp grid) and one shape scale, used everywhere.
  */
 
 /** Named colours. Tile colours double as category colours so things are recognised by colour too. */
 object Palette {
-    val Background = Color(0xFFFFF8F0) // warm "hearth" off-white
+    val Background = Color(0xFFF6F7F2) // soft paper, low glare
     val Surface = Color(0xFFFFFFFF)
-    val SurfaceDim = Color(0xFFF3EBE2)
-    val Ink = Color(0xFF1C1B1A)
-    val InkSoft = Color(0xFF5B5550)
-    val Outline = Color(0xFFD9CFC4)
+    val SurfaceDim = Color(0xFFE9ECE4)
+    val Ink = Color(0xFF14211F)
+    val InkSoft = Color(0xFF4A5754)
+    val Outline = Color(0xFFCDD3CA)
 
-    val Brand = Color(0xFFB4441C)   // ember / terracotta: the WarmHearth colour
+    val Brand = Color(0xFF0F4C4A)   // dusk teal: the WarmHearth colour
+    val Ember = Color(0xFFB35A0F)   // the "hearth" glow: Speak button, highlights
     val Green = Color(0xFF1E7B34)   // call, "I'm OK", success
     val Red = Color(0xFFC62828)     // SOS, danger
     val RedSoft = Color(0xFFFDECEA)
@@ -60,8 +61,8 @@ object Spacing {
 private val colors = lightColorScheme(
     primary = Palette.Brand,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFDBCC),
-    onPrimaryContainer = Color(0xFF3A0B00),
+    primaryContainer = Color(0xFFCFE6E2),
+    onPrimaryContainer = Color(0xFF00201E),
     secondary = Palette.Green,
     onSecondary = Color.White,
     tertiary = Palette.Blue,

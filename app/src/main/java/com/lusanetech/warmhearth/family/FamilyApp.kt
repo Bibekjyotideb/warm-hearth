@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Link
@@ -57,6 +58,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.lusanetech.warmhearth.R
 import com.lusanetech.warmhearth.billing.PaywallScreen
+import com.lusanetech.warmhearth.billing.findActivity
 import com.lusanetech.warmhearth.calls.ContactEditorDialog
 import com.lusanetech.warmhearth.data.AppMode
 import com.lusanetech.warmhearth.data.FavoriteContact
@@ -79,7 +81,14 @@ import java.util.UUID
 fun FamilyApp() {
     val context = LocalContext.current
     val graph = context.graph
+    var signedIn by remember { mutableStateOf(GoogleAccount.signedInEmail != null) }
+    if (!signedIn) {
+        FamilySignIn(onSignedIn = { signedIn = true })
+        return
+    }
     val devices by remember { graph.family.observeMyDevices() }.collectAsState(initial = null)
+    var showSupport by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
     val settings by graph.prefs.settings.collectAsState(initial = null)
     var openDevice by remember { mutableStateOf<RemoteDevice?>(null) }
     var linking by remember { mutableStateOf(false) }
@@ -89,12 +98,29 @@ fun FamilyApp() {
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= 33) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         graph.family.registerFamilyToken()
+        graph.family.watchFamilyPremium()
     }
-    // A family member who already bought the unlock gets it on every parent phone they link.
+    // Ask for a Play rating once a parent's phone has been linked for 3 days (they've seen it work).
+    LaunchedEffect(devices) {
+        if (devices.isNullOrEmpty()) return@LaunchedEffect
+        val sp = context.getSharedPreferences("review", 0)
+        val first = sp.getLong("first_link", 0L).takeIf { it > 0 } ?: System.currentTimeMillis().also { sp.edit().putLong("first_link", it).apply() }
+        if (System.currentTimeMillis() - first > 3 * 86_400_000L) context.findActivity()?.let { a ->
+            (a as? androidx.activity.ComponentActivity)?.let { com.lusanetech.warmhearth.util.AppUpdates.maybeAskForReview(it) }
+        }
+    }
+    // A family member who already bought the unlock gets it on every parent phone they link:
+    // restore() re-sends the purchase to the server with the current list of linked phones.
     LaunchedEffect(devices, settings?.premium) {
-        if (settings?.premium == true) devices?.filter { !it.premium }?.forEach { graph.family.setDevicePremium(it.id) }
+        graph.billing.familyDeviceIds = devices.orEmpty().map { it.id }
+        if (settings?.premium == true && devices.orEmpty().any { !it.premium }) graph.billing.restore()
     }
 
+    if (showSupport) {
+        BackHandler { showSupport = false }
+        com.lusanetech.warmhearth.support.SupportScreen(onBack = { showSupport = false })
+        return
+    }
     paywallFor?.let { id ->
         BackHandler { paywallFor = null }
         PaywallScreen(onBack = { paywallFor = null }, forDeviceId = id)
@@ -138,12 +164,42 @@ fun FamilyApp() {
         Spacer(Modifier.height(12.dp))
         BigButton(stringResource(R.string.link_a_phone), icon = Icons.Filled.Link, color = Palette.Green) { linking = true }
         Spacer(Modifier.weight(1f))
-        TextButton(onClick = {
-            graph.scope.launch { graph.prefs.setMode(AppMode.UNSET) }
-        }) { Text(stringResource(R.string.switch_to_senior_mode)) }
+        GoogleAccount.signedInEmail?.let { Text(stringResource(R.string.signed_in_as, it), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft) }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = { showSupport = true }) { Text(stringResource(R.string.help_support)) }
+            TextButton(onClick = {
+                graph.scope.launch { context.findActivity()?.let { GoogleAccount.signOut(it) } }
+                signedIn = false
+            }) { Text(stringResource(R.string.sign_out)) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = { graph.scope.launch { graph.prefs.setMode(AppMode.UNSET) } }) { Text(stringResource(R.string.switch_to_senior_mode)) }
+            TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.delete_my_account), color = Palette.Red) }
+        }
     }
 
     if (linking) LinkDialog(onDismiss = { linking = false })
+    if (confirmDelete) {
+        var busy by remember { mutableStateOf(false) }
+        var failed by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!busy) confirmDelete = false },
+            title = { Text(stringResource(R.string.delete_my_account)) },
+            text = { Text(stringResource(if (failed) R.string.no_internet else R.string.delete_account_body)) },
+            confirmButton = {
+                TextButton(enabled = !busy, onClick = {
+                    busy = true
+                    graph.scope.launch {
+                        if (graph.family.deleteMyAccount()) {
+                            graph.prefs.clearAll()
+                            context.findActivity()?.let { GoogleAccount.signOut(it) }
+                        } else { failed = true; busy = false }
+                    }
+                }) { Text(stringResource(R.string.delete_forever), color = Palette.Red) }
+            },
+            dismissButton = { TextButton(enabled = !busy, onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }
 
 @Composable
@@ -281,5 +337,38 @@ private fun DeviceScreen(device: RemoteDevice, onBack: () -> Unit, onUnlock: () 
         MedicineEditorDialog(m, allowPhoto = false, onDismiss = { editMed = null }) {
             family.remoteSaveMedicine(device.id, it); editMed = null
         }
+    }
+}
+
+/** First screen in family mode: why we need a Google account, then one tap to sign in. */
+@Composable
+private fun FamilySignIn(onSignedIn: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    Page(stringResource(R.string.family_signin_title), onBack = null) {
+        Text(stringResource(R.string.family_signin_body), style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(24.dp))
+        BigButton(stringResource(R.string.continue_with_google), icon = Icons.Filled.AccountCircle, enabled = !busy) {
+            busy = true; error = null
+            scope.launch {
+                when (val r = context.findActivity()?.let { GoogleAccount.signIn(it) }) {
+                    GoogleAccount.Result.Ok -> { context.graph.family.registerFamilyToken(); onSignedIn() }
+                    is GoogleAccount.Result.Failed -> error = r.message
+                    else -> Unit
+                }
+                busy = false
+            }
+        }
+        error?.let { Text(stringResource(R.string.signin_failed), color = Palette.Red, modifier = Modifier.padding(top = 12.dp)) }
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.agree_terms), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+        Row {
+            TextButton(onClick = { com.lusanetech.warmhearth.util.Links.open(context, "/privacy") }) { Text(stringResource(R.string.privacy_policy)) }
+            TextButton(onClick = { com.lusanetech.warmhearth.util.Links.open(context, "/terms") }) { Text(stringResource(R.string.terms)) }
+        }
+        Spacer(Modifier.weight(1f))
+        TextButton(onClick = { context.graph.scope.launch { context.graph.prefs.setMode(AppMode.UNSET) } }) { Text(stringResource(R.string.switch_to_senior_mode)) }
     }
 }

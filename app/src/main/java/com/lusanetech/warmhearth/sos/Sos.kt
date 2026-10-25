@@ -38,6 +38,8 @@ object Sos {
      */
     suspend fun trigger(context: Context, reason: String, callFirst: Boolean = true): SosResult {
         val graph = context.graph
+        com.lusanetech.warmhearth.util.Telemetry.milestone(context, graph.prefs.current().deviceId, com.lusanetech.warmhearth.util.Telemetry.Step.TESTED_SOS)
+        com.lusanetech.warmhearth.util.Telemetry.event(context, "sos", "reason" to reason)
         val location = currentLocation(context)
         val link = location?.let { "https://maps.google.com/?q=${it.latitude},${it.longitude}" }
         val name = graph.prefs.current().seniorName.ifBlank { context.getString(R.string.your_family_member) }

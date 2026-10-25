@@ -38,6 +38,10 @@ import com.lusanetech.warmhearth.ui.BigButton
 import com.lusanetech.warmhearth.ui.Page
 import com.lusanetech.warmhearth.ui.Palette
 import com.lusanetech.warmhearth.util.HomeRole
+import com.lusanetech.warmhearth.util.Links
+import com.lusanetech.warmhearth.util.Telemetry
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.TextButton
 import kotlinx.coroutines.launch
 
 /**
@@ -59,9 +63,14 @@ fun OnboardingScreen() {
         if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
     }.toTypedArray()
 
-    val homeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        scope.launch { context.graph.prefs.setMode(AppMode.SENIOR); context.graph.start() }
+    fun finishSenior() = scope.launch {
+        context.graph.prefs.setMode(AppMode.SENIOR)
+        context.graph.start()
+        val id = context.graph.prefs.ensureDeviceId()
+        if (HomeRole.isDefault(context)) Telemetry.milestone(context, id, Telemetry.Step.SET_HOME)
+        Telemetry.event(context, "onboarding_done", "home" to HomeRole.isDefault(context))
     }
+    val homeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { finishSenior() }
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         step = 3
     }
@@ -77,6 +86,12 @@ fun OnboardingScreen() {
             }
             Spacer(Modifier.height(16.dp))
             Text(stringResource(R.string.mode_family_hint), style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.agree_terms), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+            Row {
+                TextButton(onClick = { Links.open(context, "/privacy") }) { Text(stringResource(R.string.privacy_policy)) }
+                TextButton(onClick = { Links.open(context, "/terms") }) { Text(stringResource(R.string.terms)) }
+            }
         }
 
         1 -> Page(stringResource(R.string.setup_title), onBack = { step = 0 }) {
@@ -121,7 +136,7 @@ fun OnboardingScreen() {
             Spacer(Modifier.height(24.dp))
             BigButton(stringResource(R.string.set_home_button), icon = Icons.Filled.Home) {
                 if (HomeRole.isDefault(context)) {
-                    scope.launch { context.graph.prefs.setMode(AppMode.SENIOR); context.graph.start() }
+                    finishSenior()
                 } else {
                     homeLauncher.launch(HomeRole.requestIntent(context))
                 }

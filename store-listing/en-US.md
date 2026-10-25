@@ -51,9 +51,9 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • Add contacts and medicines for your parents from anywhere
 • Get SOS, fall and missed-medicine alerts instantly
 
-★ FAIR PRICING
+★ FREE, WITH PREMIUM WHEN YOU NEED IT
 Free: the senior launcher, big dialer, photo contacts (up to 4), SOS with family alerts, 3 scam checks a day.
-One-time unlock — pay once, yours forever, no subscription: family remote setup, medicine reminders, fall detection, unlimited contacts, AI reading and scam checks.
+WarmHearth Premium (monthly or yearly, 7-day free trial): family remote setup, medicine reminders with missed-dose alerts, fall detection, unlimited contacts, AI reading and scam checks. Cancel any time in Google Play.
 
 Whether you call it a senior launcher, old age launcher, big icons launcher or a senior citizen app — WarmHearth is the simple launcher for elderly parents that keeps the whole family close.
 
@@ -69,7 +69,7 @@ Note: fall detection and AI answers are helpers, not medical devices or professi
 5. Medicine alarms with a photo of the pill
 6. Manage their phone from yours
 7. Fall detection that calls for help
-8. Pay once. No subscription.
+8. Try Premium free for 7 days
 
 ## Category & tags
 Category: Personalization (launchers rank here). Tags: Launcher, Accessibility, Family.

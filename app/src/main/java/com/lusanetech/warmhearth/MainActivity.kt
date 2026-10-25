@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val openOnStart = intent?.getStringExtra(EXTRA_OPEN)
         handleShare(intent)
+        updates = com.lusanetech.warmhearth.util.AppUpdates(this)
         setContent {
             val settings by graph.prefs.settings.collectAsStateWithLifecycle(initialValue = null)
             val s = settings ?: return@setContent
@@ -64,6 +65,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private var updates: com.lusanetech.warmhearth.util.AppUpdates? = null
+
+    override fun onResume() {
+        super.onResume()
+        updates?.check() // forced / background updates via Play (see util/AppUpdates.kt)
+    }
+
+    override fun onDestroy() {
+        updates?.release()
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -80,7 +93,7 @@ class MainActivity : ComponentActivity() {
 }
 
 /** Every screen of the senior side. Kept as a flat enum: no nested back stacks to get lost in. */
-enum class Screen { HOME, APPS, DIALER, CONTACTS, MEDS, SOS, SCAM, READ, PIN, SETTINGS, EDIT_CONTACTS, EDIT_MEDS, TILES, PAIRING, PAYWALL }
+enum class Screen { HOME, APPS, DIALER, CONTACTS, MEDS, SOS, SCAM, READ, PIN, SETTINGS, EDIT_CONTACTS, EDIT_MEDS, TILES, PAIRING, PAYWALL, SUPPORT }
 
 @Composable
 private fun SeniorApp(s: Settings, openOnStart: String?) {
@@ -88,7 +101,7 @@ private fun SeniorApp(s: Settings, openOnStart: String?) {
     // Where the paywall returns to, so it can never be used to skip the settings PIN.
     var paywallReturn by remember { mutableStateOf(Screen.HOME) }
     // Settings sub-pages return to Settings; everything else returns Home.
-    val settingsChildren = setOf(Screen.EDIT_CONTACTS, Screen.EDIT_MEDS, Screen.TILES, Screen.PAIRING)
+    val settingsChildren = setOf(Screen.EDIT_CONTACTS, Screen.EDIT_MEDS, Screen.TILES, Screen.PAIRING, Screen.SUPPORT)
     val back: () -> Unit = {
         screen = when (screen) {
             Screen.PAYWALL -> paywallReturn
@@ -133,5 +146,6 @@ private fun SeniorApp(s: Settings, openOnStart: String?) {
         // Pairing is free: the family member can buy the unlock from their own phone after linking.
         Screen.PAIRING -> PairingScreen(onBack = back)
         Screen.PAYWALL -> PaywallScreen(onBack = back)
+        Screen.SUPPORT -> com.lusanetech.warmhearth.support.SupportScreen(onBack = back)
     }
 }

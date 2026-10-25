@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>WarmHearth Admin</title>
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div id="signin" class="center" hidden>
+  <div class="signin-card">
+    <h1>WarmHearth Admin</h1>
+    <p id="signin-msg">Sign in with an admin Google account.</p>
+    <button class="btn" id="signin-btn">Sign in with Google</button>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <aside class="side">
+    <div class="side-brand">WarmHearth<span>Admin</span></div>
+    <nav>
+      <a href="#overview" data-tab="overview">Overview</a>
+      <a href="#funnel" data-tab="funnel">Funnel & retention</a>
+      <a href="#users" data-tab="users">Users</a>
+      <a href="#purchases" data-tab="purchases">Subscriptions</a>
+      <a href="#tickets" data-tab="tickets">Support tickets <b id="open-badge" hidden></b></a>
+    </nav>
+    <div class="side-foot"><span id="who"></span><button class="link" id="signout">Sign out</button></div>
+  </aside>
+
+  <main class="main">
+    <section id="tab-overview" class="tab">
+      <header class="tab-head"><h1>Overview</h1><span class="muted" id="updated"></span></header>
+      <div class="kpis" id="kpis"></div>
+      <div class="panel">
+        <h2>Daily active senior phones (30 days)</h2>
+        <div id="chart-dau" class="chart"></div>
+      </div>
+      <div class="panel">
+        <h2>New subscriptions and refunds per day (30 days)</h2>
+        <div id="chart-sales" class="chart"></div>
+      </div>
+    </section>
+
+    <section id="tab-funnel" class="tab" hidden>
+      <header class="tab-head"><h1>Funnel & retention</h1></header>
+      <div class="panel">
+        <h2>Where senior-phone setups drop off</h2>
+        <p class="muted">Each step counts phones that have done it at least once. The biggest drop is highlighted.</p>
+        <div id="funnel"></div>
+      </div>
+      <div class="panel">
+        <h2>How long phones keep using WarmHearth</h2>
+        <p class="muted">Days on which the phone opened WarmHearth at least once.</p>
+        <div id="usage"></div>
+      </div>
+    </section>
+
+    <section id="tab-users" class="tab" hidden>
+      <header class="tab-head"><h1>Users</h1>
+        <form id="user-search" class="search"><input name="q" placeholder="Find family user by email" type="email"><button class="btn sm">Find</button></form>
+      </header>
+      <div class="panel">
+        <h2>Senior phones <span class="muted" id="phones-note">most recently active</span></h2>
+        <div class="table-wrap"><table id="phones"></table></div>
+        <button class="btn ghost sm" id="phones-more">Load more</button>
+      </div>
+      <div class="panel">
+        <h2>Family accounts</h2>
+        <div class="table-wrap"><table id="family"></table></div>
+        <button class="btn ghost sm" id="family-more">Load more</button>
+      </div>
+    </section>
+
+    <section id="tab-purchases" class="tab" hidden>
+      <header class="tab-head"><h1>Subscriptions</h1></header>
+      <div class="panel"><div class="table-wrap"><table id="purchases"></table></div>
+        <button class="btn ghost sm" id="purchases-more">Load more</button></div>
+    </section>
+
+    <section id="tab-tickets" class="tab" hidden>
+      <header class="tab-head"><h1>Support tickets</h1>
+        <div class="seg" id="ticket-filter">
+          <button data-status="open" class="on">Open</button>
+          <button data-status="waiting_on_user">Waiting on user</button>
+          <button data-status="closed">Closed</button>
+        </div>
+      </header>
+      <div class="tickets">
+        <ul id="ticket-list" class="ticket-list"></ul>
+        <div id="ticket-view" class="ticket-view"><p class="muted">Choose a ticket.</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

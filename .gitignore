@@ -16,3 +16,5 @@ firebase/functions/node_modules/
 firebase/.firebase/
 tools/play-aso/node_modules/
 tools/play-aso/out/
+firebase/functions/out/
+web-src/node_modules/

@@ -112,6 +112,18 @@ fun HomeScreen(settings: Settings, onOpen: (Screen) -> Unit) {
     ) {
         ClockHeader(settings.seniorName, onSettings = { onOpen(Screen.PIN) })
 
+        // Message set remotely in Remote Config (e.g. "Alarms were late on Redmi phones: update now").
+        val notice = remember { com.lusanetech.warmhearth.util.RemoteFlags.announcement(java.util.Locale.getDefault().language == "hi") }
+        if (notice.isNotBlank()) {
+            Text(
+                notice,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.primaryContainer).padding(12.dp),
+            )
+        }
+
         if (contacts.isNotEmpty()) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(vertical = 8.dp)) {
                 items(contacts.take(6), key = { it.id }) { c ->
@@ -248,7 +260,7 @@ private fun SpeakButton(modifier: Modifier, onClick: () -> Unit) {
         modifier
             .height(80.dp)
             .clip(MaterialTheme.shapes.extraLarge)
-            .background(Palette.Brand)
+            .background(Palette.Ember)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

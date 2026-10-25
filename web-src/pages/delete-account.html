@@ -1,0 +1,31 @@
+<article class="prose">
+<div class="wrap">
+<h1>Delete your WarmHearth account</h1>
+<p>You can delete your account and data at any time. This page is the official deletion route for WarmHearth by {{company}}.</p>
+
+<h2>Fastest: in the app</h2>
+<ol>
+<li><strong>Family member:</strong> open WarmHearth → the menu on your family screen → <strong>Delete my account</strong>. This deletes your account, removes you from every linked phone, and deletes your tickets straight away.</li>
+<li><strong>Senior's phone:</strong> open Settings (PIN) → <strong>Delete this phone's data</strong>, then uninstall. This deletes the phone's contacts, medicines and alerts from our servers.</li>
+</ol>
+
+<h2>What is deleted, and what is kept</h2>
+<ul>
+<li><strong>Deleted:</strong> your account, name and email, linked phones' data you own (contacts, medicine lists, alerts), notification tokens, support tickets.</li>
+<li><strong>Kept:</strong> purchase records (order ID, date, country) for 8 years because Indian tax law requires it, with your email and name removed. Google Play keeps its own payment records.</li>
+<li>Photos were never uploaded; they are removed when the app is uninstalled.</li>
+</ul>
+
+<h2>Or ask us</h2>
+<p>Can't open the app any more? Fill this in and we'll delete everything linked to that email within 30 days, and confirm by email.</p>
+<form class="form" id="ticket-form" data-category="deletion" novalidate>
+  <label>Your name<input name="name" autocomplete="name" required maxlength="80"></label>
+  <label>Email of the Google account used in WarmHearth<input name="email" type="email" autocomplete="email" required maxlength="120"></label>
+  <input type="hidden" name="subject" value="Account deletion request">
+  <label>Anything we should know? (optional)<textarea name="message" maxlength="2000">Please delete my WarmHearth account and data.</textarea></label>
+  <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <button class="btn btn-primary" type="submit">Request deletion</button>
+  <div class="form-status" id="form-status" role="status" hidden></div>
+</form>
+</div>
+</article>

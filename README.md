@@ -17,7 +17,7 @@ Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Me
 
 ## How it makes money
 
-| Free | One-time "lifetime unlock" (`premium_lifetime`) |
+| Free | WarmHearth Premium (Google Play subscription `warmhearth_premium`) |
 |---|---|
 | Big-icon home screen, big dialer | Family remote setup (edit contacts & medicines from your phone) |
 | Up to 4 photo contacts | Unlimited contacts |
@@ -25,8 +25,16 @@ Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Me
 | 3 AI scam checks a day | Fall detection |
 | Voice commands | 30 AI requests a day (scam, read-it-to-me, medicine reader) |
 
-The **family member** usually buys: the paywall appears on *their* phone when they try to manage
-the parent's phone. Suggested prices: US $9.99, India ₹399. Google keeps 15%.
+| | Monthly | Yearly |
+|---|---|---|
+| India | ₹149 | ₹899 (save 50%) |
+| Rest of world | US$4.99 | US$39.99 (save 33%) |
+
+7-day free trial on both plans for new subscribers; reminder email 2 days before the first charge. The
+family member usually subscribes, from their own phone. Google keeps 15% of subscription revenue.
+
+Full production docs: [`docs/OPERATIONS.md`](docs/OPERATIONS.md) (email, domain, Firebase, Play Console,
+admin panel, releases, monitoring) · app screen previews: [`docs/app-preview.html`](docs/app-preview.html).
 
 ## Project map
 
@@ -76,7 +84,7 @@ tools/play-aso/            Play Store keyword scorers used for the listing
 
 ### 3. Play Console
 1. Create the app (one-time $25 developer fee).
-2. **Monetize → In-app products** → create `premium_lifetime` (one-time) and set prices per country.
+2. **Monetize → Subscriptions** → create `warmhearth_premium` with `monthly` and `yearly` base plans and a 7-day trial (details in docs/OPERATIONS.md).
 3. Store listing: copy from `store-listing/en-US.md` and `store-listing/hi-IN.md`.
 4. App content declarations you will be asked for:
    - **Foreground service: health**: fall detection (accelerometer).

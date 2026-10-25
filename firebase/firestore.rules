@@ -1,58 +1,60 @@
 rules_version = '2';
 
 // Who can do what:
-//  - The senior's phone (owner) controls its own device document and everything under it.
+//  - The senior's phone (owner) controls its own device document and everything under it,
+//    EXCEPT premium: only Cloud Functions (verifyPurchase / playRtdn) can grant or revoke it.
 //  - A family member joins by presenting a valid, unexpired pair code.
 //  - Family members can always read; they can edit contacts/medicines only on unlocked phones.
+//  - Admins (custom claim admin=true, set with `npm run set-admin`) can read everything for the
+//    admin panel and reply to support tickets.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
     function dev(deviceId) { return get(/databases/$(database)/documents/devices/$(deviceId)).data; }
     function isOwner(deviceId) { return signedIn() && dev(deviceId).ownerUid == request.auth.uid; }
     function isFamily(deviceId) { return signedIn() && request.auth.uid in dev(deviceId).family; }
     function pairCode(code) { return get(/databases/$(database)/documents/pairCodes/$(code)).data; }
+    function changes() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    // Fields only the server may set.
+    function serverOnlyDeviceFields() { return ['ownerUid', 'premium', 'premiumOrderId']; }
 
     match /devices/{deviceId} {
       // resource == null: the senior's phone checks whether its (random-id) document exists yet.
-      allow read: if signedIn()
+      allow read: if isAdmin() || (signedIn()
         && (resource == null
           || resource.data.ownerUid == request.auth.uid
-          || request.auth.uid in resource.data.family);
+          || request.auth.uid in resource.data.family));
 
       allow create: if signedIn()
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.family == [];
+        && request.resource.data.family == []
+        && !('premium' in request.resource.data && request.resource.data.premium == true);
 
       allow update: if
-        // 1. The senior's own phone: anything except changing the owner.
+        // 1. The senior's own phone: names, telemetry, funnel. Never ownership or premium.
         (signedIn()
           && resource.data.ownerUid == request.auth.uid
-          && request.resource.data.ownerUid == resource.data.ownerUid)
+          && !changes().hasAny(serverOnlyDeviceFields()))
         // 2. A family member adding only themselves, with a valid code for this phone.
         || (signedIn()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['family', 'lastPairCode'])
+          && changes().hasOnly(['family', 'lastPairCode'])
           && request.resource.data.family.toSet().difference(resource.data.family.toSet()) == [request.auth.uid].toSet()
           && resource.data.family.toSet().difference(request.resource.data.family.toSet()).size() == 0
           && pairCode(request.resource.data.lastPairCode).deviceId == deviceId
-          && pairCode(request.resource.data.lastPairCode).expiresAt > request.time)
-        // 3. A linked family member unlocking the phone after buying.
-        //    TODO before scale: verify the purchase token server-side (Play Developer API).
-        || (signedIn()
-          && request.auth.uid in resource.data.family
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['premium'])
-          && request.resource.data.premium == true);
+          && pairCode(request.resource.data.lastPairCode).expiresAt > request.time);
 
       match /contacts/{id} {
-        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow read: if isOwner(deviceId) || isFamily(deviceId) || isAdmin();
         allow write: if isOwner(deviceId) || (isFamily(deviceId) && dev(deviceId).premium == true);
       }
       match /medicines/{id} {
-        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow read: if isOwner(deviceId) || isFamily(deviceId) || isAdmin();
         allow write: if isOwner(deviceId) || (isFamily(deviceId) && dev(deviceId).premium == true);
       }
       match /events/{id} {
-        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow read: if isOwner(deviceId) || isFamily(deviceId) || isAdmin();
         allow create: if isOwner(deviceId);
       }
     }
@@ -64,7 +66,30 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow create: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['premium', 'premiumSince', 'welcomedAt']);
+      allow update: if signedIn() && request.auth.uid == uid
+        && !changes().hasAny(['premium', 'premiumSince', 'welcomedAt']);
     }
+
+    // Created only by the submitTicket function. Users read their own; admins read and reply.
+    match /tickets/{ticketId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin() && changes().hasOnly(['status', 'assignee', 'note', 'updatedAt']);
+      match /messages/{messageId} {
+        allow read: if isAdmin() || (signedIn() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.uid == request.auth.uid);
+        allow create: if isAdmin()
+          && request.resource.data.from == 'admin'
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 5000
+          && request.resource.data.keys().hasOnly(['from', 'text', 'createdAt', 'authorEmail', 'close']);
+      }
+    }
+
+    match /subscriptions/{token} { allow read: if isAdmin(); }
+    match /stats/{day} { allow read: if isAdmin(); }
+    // rateLimits: server only (no client rule = denied)
   }
 }

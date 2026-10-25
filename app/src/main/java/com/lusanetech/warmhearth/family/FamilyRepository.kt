@@ -16,6 +16,8 @@ import com.lusanetech.warmhearth.data.Medicine
 import com.lusanetech.warmhearth.data.Prefs
 import com.lusanetech.warmhearth.meds.MedicineScheduler
 import com.lusanetech.warmhearth.util.PhotoStore
+import com.lusanetech.warmhearth.util.Telemetry
+import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -71,7 +73,7 @@ class FamilyRepository(
         runCatching {
             val snap = doc.get().await()
             if (!snap.exists()) {
-                doc.set(mapOf("ownerUid" to uid, "name" to s.seniorName, "premium" to s.premium, "family" to emptyList<String>())).await()
+                doc.set(mapOf("ownerUid" to uid, "name" to s.seniorName, "family" to emptyList<String>(), "createdAt" to FieldValue.serverTimestamp())).await()
             } else {
                 doc.set(mapOf("name" to s.seniorName), SetOptions.merge())
             }
@@ -107,7 +109,9 @@ class FamilyRepository(
                 val remotePremium = snap.getBoolean("premium") == true
                 scope.launch {
                     prefs.setPaired(family > 0)
-                    if (remotePremium && !prefs.current().premium) prefs.setPremium(true)
+                    if (family > 0) Telemetry.milestone(context, id, Telemetry.Step.LINKED_FAMILY)
+                    // The server is the source of truth for premium (granted by verifyPurchase, revoked on refund).
+                    if (remotePremium != prefs.current().premium) prefs.setPremium(remotePremium)
                 }
             }
 
@@ -158,6 +162,7 @@ class FamilyRepository(
 
     suspend fun saveContact(c: FavoriteContact) {
         db.contacts().upsert(c)
+        Telemetry.milestone(context, prefs.current().deviceId, Telemetry.Step.ADDED_CONTACT)
         prefs.current().deviceId.takeIf { it.isNotBlank() }?.let { pushContact(it, c) }
     }
 
@@ -171,6 +176,7 @@ class FamilyRepository(
         db.medicines().get(m.id)?.let { scheduler.cancel(it) }
         db.medicines().upsert(m)
         scheduler.schedule(m)
+        Telemetry.milestone(context, prefs.current().deviceId, Telemetry.Step.ADDED_MEDICINE)
         prefs.current().deviceId.takeIf { it.isNotBlank() }?.let { pushMedicine(it, m) }
     }
 
@@ -189,6 +195,8 @@ class FamilyRepository(
         val data = hashMapOf<String, Any?>(
             "type" to type, "message" to message, "lat" to lat, "lng" to lng,
             "createdAt" to FieldValue.serverTimestamp(),
+            // Firestore TTL deletes alerts after 90 days (see firestore.indexes.json / privacy policy).
+            "expireAt" to Timestamp(java.util.Date(System.currentTimeMillis() + 90L * 86_400_000)),
         )
         // Firestore queues the write while offline and sends it when the network returns.
         val task = device(s.deviceId).collection("events").add(data)
@@ -212,12 +220,32 @@ class FamilyRepository(
     // ------------------------------------------------------------------ family side
 
     suspend fun registerFamilyToken() {
-        val uid = uid() ?: return
-        val token = runCatching { FirebaseMessaging.getInstance().token.await() }.getOrNull() ?: return
-        runCatching {
-            fs.collection("users").document(uid).set(mapOf("fcmTokens" to FieldValue.arrayUnion(token)), SetOptions.merge()).await()
+        val user = auth.currentUser?.takeIf { !it.isAnonymous } ?: return
+        val ref = fs.collection("users").document(user.uid)
+        val profile = hashMapOf<String, Any>("role" to "family")
+        user.email?.let { profile["email"] = it.lowercase() }
+        user.displayName?.let { profile["displayName"] = it }
+        runCatching { if (!ref.get().await().exists()) profile["createdAt"] = FieldValue.serverTimestamp() }
+        runCatching { FirebaseMessaging.getInstance().token.await() }.getOrNull()?.let { profile["fcmTokens"] = FieldValue.arrayUnion(it) }
+        runCatching { ref.set(profile, SetOptions.merge()).await() }
+        Telemetry.heartbeat(context, "users", user.uid)
+    }
+
+    /** Family side: premium comes from users/{uid}.premium, set by the server after a verified purchase. */
+    fun watchFamilyPremium() {
+        val uid = auth.currentUser?.takeIf { !it.isAnonymous }?.uid ?: return
+        fs.collection("users").document(uid).addSnapshotListener { snap, _ ->
+            val premium = snap?.getBoolean("premium") == true
+            scope.launch { if (premium != prefs.current().premium) prefs.setPremium(premium) }
         }
     }
+
+    /** Deletes the account and all data the caller owns on the server (Play's account-deletion requirement). */
+    suspend fun deleteMyAccount(): Boolean = runCatching {
+        FirebaseFunctions.getInstance("asia-south1").getHttpsCallable("deleteMyAccount").call().await()
+        auth.signOut()
+        true
+    }.getOrElse { Log.w(TAG, "delete", it); false }
 
     sealed interface LinkResult {
         data class Linked(val deviceId: String) : LinkResult
@@ -284,18 +312,6 @@ class FamilyRepository(
     fun remoteDeleteContact(deviceId: String, id: String) = tombstone(deviceId, "contacts", id)
     fun remoteSaveMedicine(deviceId: String, m: Medicine) = pushMedicine(deviceId, m.copy(updatedAt = System.currentTimeMillis()))
     fun remoteDeleteMedicine(deviceId: String, id: String) = tombstone(deviceId, "medicines", id)
-
-    /** Marks a parent's phone as unlocked after the family member bought the lifetime unlock. */
-    suspend fun setDevicePremium(deviceId: String) {
-        runCatching { device(deviceId).update("premium", true).await() }
-    }
-
-    /** Senior bought on their own phone: let linked family phones see it too. */
-    suspend fun markOwnDevicePremium() {
-        val id = prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return
-        if (uid() == null) return
-        runCatching { device(id).set(mapOf("premium" to true), SetOptions.merge()).await() }
-    }
 
     // ------------------------------------------------------------------ mapping
 

@@ -1,0 +1,13 @@
+{
+  "name": "warmhearth-web",
+  "private": true,
+  "scripts": {
+    "build": "python3 build.py && esbuild js/support.js js/admin.js --bundle --minify --format=esm --target=es2020 --outdir=../web/js --entry-names=[name]",
+    "watch": "esbuild js/support.js js/admin.js --bundle --format=esm --outdir=../web/js --entry-names=[name] --watch"
+  },
+  "devDependencies": {
+    "@material-symbols/svg-500": "^0.48.1",
+    "esbuild": "^0.25.0",
+    "firebase": "^12.4.0"
+  }
+}

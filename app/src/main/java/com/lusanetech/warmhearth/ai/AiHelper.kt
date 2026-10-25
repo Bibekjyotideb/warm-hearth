@@ -9,6 +9,8 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
 import com.lusanetech.warmhearth.graph
+import com.lusanetech.warmhearth.util.RemoteFlags
+import com.lusanetech.warmhearth.util.Telemetry
 import org.json.JSONObject
 import java.util.Locale
 
@@ -20,21 +22,31 @@ import java.util.Locale
  * flagships, and most parents use mid-range phones.
  *
  * Cost control: every call counts against a daily per-phone cap (see [AiQuota]).
- * Swap [MODEL] for the cheapest current "Flash-Lite" model when Google retires this one.
+ * The model name, daily limits and an extra prompt line come from Remote Config (util/RemoteFlags),
+ * so a retired model or a misbehaving prompt can be fixed without an app update.
  */
 object AiHelper {
-    const val MODEL = "gemini-2.5-flash-lite"
     private const val TAG = "Ai"
 
-    private val model by lazy {
+    private var cachedName: String? = null
+    private var cachedModel: com.google.firebase.ai.GenerativeModel? = null
+    private val model: com.google.firebase.ai.GenerativeModel
+        get() {
+            val name = RemoteFlags.aiModel
+            cachedModel?.takeIf { cachedName == name }?.let { return it }
+            return buildModel(name).also { cachedModel = it; cachedName = name }
+        }
+
+    private fun buildModel(name: String) =
         Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
-            modelName = MODEL,
+            modelName = name,
             generationConfig = generationConfig {
                 temperature = 0.2f
                 responseMimeType = "application/json"
             },
         )
-    }
+
+    private fun note() = RemoteFlags.aiPromptNote.takeIf { it.isNotBlank() }?.let { "\n$it" } ?: ""
 
     /** Hindi phones get Hindi answers; everything else English. */
     private fun language(): String = if (Locale.getDefault().language == "hi") "Hindi" else "simple English"
@@ -62,7 +74,7 @@ object AiHelper {
 
             MESSAGE:
             $message
-        """.trimIndent()
+        """.trimIndent() + note()
         val json = JSONObject(model.generateContent(prompt).text ?: "{}")
         ScamVerdict(
             risk = runCatching { Risk.valueOf(json.optString("risk").uppercase()) }.getOrDefault(Risk.SUSPICIOUS),
@@ -78,7 +90,7 @@ object AiHelper {
             numbers or dates, and whether they need to do anything. If it looks like a scam, say so first.
             If the photo is unreadable, say so kindly and ask them to take it again closer.
             Return JSON: {"summary":"..."}
-        """.trimIndent()
+        """.trimIndent() + note()
         val json = JSONObject(model.generateContent(content { image(photo); text(prompt) }).text ?: "{}")
         Explanation(json.optString("summary"))
     }
@@ -88,14 +100,16 @@ object AiHelper {
             Read this medicine package or strip. Return JSON:
             {"name":"brand name and strength, e.g. Dolo 650","dose":"how much per time if printed, else empty","instructions":"one short line in ${language()} from the label, else empty"}
             Only use what is printed. Do not give medical advice. If unreadable, return empty strings.
-        """.trimIndent()
+        """.trimIndent() + note()
         val json = JSONObject(model.generateContent(content { image(photo); text(prompt) }).text ?: "{}")
         MedicineLabel(json.optString("name"), json.optString("dose"), json.optString("instructions"))
     }
 
     private suspend fun <T> call(context: Context, kind: AiQuota.Kind, block: suspend () -> T): Result<T> {
+        if (!RemoteFlags.aiEnabled) return Result.Failed // remote kill switch
         val premium = context.graph.prefs.current().premium
         if (!AiQuota.tryUse(context, kind, premium)) return Result.LimitReached
+        Telemetry.event(context, "ai_use", "kind" to kind.name, "premium" to premium)
         return try {
             Result.Ok(block())
         } catch (e: Exception) {
@@ -114,12 +128,10 @@ object AiHelper {
 
 /**
  * Daily caps per phone. Scam checks are partly free (they are the best advert for the unlock);
- * reading documents and medicine boxes is part of the lifetime unlock.
+ * reading documents and medicine boxes is part of Premium.
  */
 object AiQuota {
     enum class Kind { SCAM, READ }
-    private const val FREE_SCAM_PER_DAY = 3
-    private const val PREMIUM_PER_DAY = 30
 
     fun tryUse(context: Context, kind: Kind, premium: Boolean): Boolean {
         val sp = context.getSharedPreferences("ai_quota", Context.MODE_PRIVATE)
@@ -127,8 +139,8 @@ object AiQuota {
         if (sp.getString("day", "") != today) sp.edit().clear().putString("day", today).apply()
         val key = if (premium) "all" else kind.name
         val limit = when {
-            premium -> PREMIUM_PER_DAY
-            kind == Kind.SCAM -> FREE_SCAM_PER_DAY
+            premium -> RemoteFlags.aiPremiumPerDay
+            kind == Kind.SCAM -> RemoteFlags.aiFreeScamPerDay
             else -> 0
         }
         val used = sp.getInt(key, 0)
