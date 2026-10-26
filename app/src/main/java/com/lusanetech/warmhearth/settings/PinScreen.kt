@@ -31,7 +31,7 @@ import com.lusanetech.warmhearth.ui.Palette
 
 /** Keeps settings away from accidental taps. The family sets the PIN during setup. */
 @Composable
-fun PinScreen(expected: String, onBack: () -> Unit, onSuccess: () -> Unit) {
+fun PinScreen(expected: String, onBack: () -> Unit, onSuccess: () -> Unit, onPrivacy: (() -> Unit)? = null) {
     var entered by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
     val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫")
@@ -70,6 +70,12 @@ fun PinScreen(expected: String, onBack: () -> Unit, onSuccess: () -> Unit) {
                         contentAlignment = Alignment.Center,
                     ) { Text(key, style = MaterialTheme.typography.displayMedium) }
                 }
+            }
+        }
+        // Always reachable without the PIN: the senior can see and stop what family can see.
+        if (onPrivacy != null) {
+            androidx.compose.material3.TextButton(onClick = onPrivacy, modifier = Modifier.padding(top = 8.dp)) {
+                Text(androidx.compose.ui.res.stringResource(R.string.privacy_sharing_no_pin), style = MaterialTheme.typography.titleMedium)
             }
         }
     }

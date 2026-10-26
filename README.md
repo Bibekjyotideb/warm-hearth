@@ -1,117 +1,99 @@
 # WarmHearth
 
-**Play Store title:** `Elderly Launcher: WarmHearth`
+**Play Store title:** `Elderly Launcher: WarmHearth` · **Package:** `com.lusanetech.warmhearth` ·
+**Site:** warmhearth.lusanetech.com · **By:** Lusane Technologies
 
-A big-button Android launcher for elderly parents, with SOS, fall detection, medicine reminders,
-AI helpers (scam checker, "read it to me", medicine-box reader) and voice commands. The same app
-has a **family mode**: the son or daughter installs it too, links with an 8-letter code, and gets a
-dashboard per parent: daily "I'm OK" check-ins, safety alerts (phone on silent, battery low, offline,
-unused), ring the phone / turn the ringer back on, today's medicines, photos and notes for the parent's
-home screen, full remote control (contacts with photos and home-screen faces, medicine times and
-reminder sounds, text size, tiles, fall detection, PIN), and watch readings via Health Connect. A scam call shield warns
-about, silences or blocks calls from unknown numbers.
+One Android app with two modes:
 
-Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Storage, Messaging, Functions, AI Logic, App Check, Remote Config, In-App Messaging) · WorkManager · Play Billing 8 · English + Hindi.
+- **On the parent's phone:** a calm, big-button home screen (big tiles, faces to tap) that still
+  looks like a normal phone, not a toy.
+  - Hold-to-SOS with location, and fall detection.
+  - Medicine alarms that can speak the medicine's name.
+  - Daily "I'm OK" and "Ask my family to call me".
+  - Photos from family on the home screen.
+  - A scam call shield, plus AI "Is this a scam?" and "Read it to me".
+  - Voice commands, in English and Hindi.
+- **On the son's or daughter's phone:** a dashboard for each parent.
+  - Is the phone OK: battery, on silent, last used.
+  - Safety alerts, with one-tap "Ring phone" and "Turn ringer on".
+  - Today's medicines, taken or missed.
+  - Watch readings through Health Connect.
+  - Remote control of contacts (with photos and home-screen faces), medicine times and sounds,
+    text size, buttons, fall detection and the PIN.
 
-> **Status:** written in full but **not yet compiled** (the cloud workspace it was written in can't
-> download Android build tools). The first Android Studio sync may flag a few small things,
-> usually a library version or a renamed API. Fix those first.
+Kotlin · Jetpack Compose · Material 3 · Room · WorkManager · Health Connect · Play Billing 8 ·
+Firebase (Auth, Firestore, Storage, Functions, Messaging, AI Logic/Gemini, App Check, Remote Config,
+In-App Messaging, Hosting) · English + Hindi.
 
----
+> **Status (v1.2.0):** the app, backend, website and admin panel are all written. The Android app has
+> **not been compiled or run** yet. The backend is **not deployed**, because no Firebase project
+> exists yet. Start with [`docs/HANDOVER.md`](docs/HANDOVER.md).
+
+## Documentation
+
+| Read this | For |
+|---|---|
+| [`docs/HANDOVER.md`](docs/HANDOVER.md) | Full project context: status, decisions and why, architecture, data model, conventions, risks, history |
+| [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Step-by-step setup and runbooks: Zoho email, Firebase, deploy, domain, Play Console, admin panel, releases, monitoring, Remote Config keys, referral links, breach response |
+| [`docs/PLAY_COMPLIANCE.md`](docs/PLAY_COMPLIANCE.md) | Why each feature is allowed on Google Play, every Play Console form answer, Indian law checklist |
+| [`docs/DATA_SAFETY.md`](docs/DATA_SAFETY.md) | Play Data safety answers and the Health Connect declaration text |
+| [`store-listing/`](store-listing) | Play listing copy (en-US, hi-IN), keyword research results |
+| [`CLAUDE.md`](CLAUDE.md) | Rules for AI coding sessions on this repo |
+| [`docs/app-preview.html`](docs/app-preview.html), [`docs/screens/`](docs/screens) | All app screens and website screenshots |
 
 ## How it makes money
 
-| Free | WarmHearth Premium (Google Play subscription `warmhearth_premium`) |
-|---|---|
-| Big-icon home screen, big dialer | Safety alerts: missed check-in, on silent, low battery, offline, unused |
-| Up to 4 photo contacts | Ring their phone, turn their ringer back on |
-| SOS: calls family + alerts linked phones with location | Family remote setup (contacts, medicines, text size, tiles, call shield) |
-| Daily "I'm OK" + "Call me" requests | Medicine reminders + taken / missed tracking |
-| Photos & notes from family | Fall detection, unlimited contacts |
-| Scam call shield, voice commands, 3 AI scam checks a day | 30 AI requests a day (scam, read-it-to-me, medicine reader) |
+WarmHearth Premium is a Google Play subscription (`warmhearth_premium`) with a 7-day free trial.
+One subscription covers every parent phone the subscriber links.
 
 | | Monthly | Yearly |
 |---|---|---|
-| India | ₹149 | ₹899 (save 50%) |
-| Rest of world | US$4.99 | US$39.99 (save 33%) |
+| India | ₹149 | ₹899 |
+| Rest of world | US$4.99 | US$39.99 |
 
-7-day free trial on both plans for new subscribers; reminder email 2 days before the first charge. The
-family member usually subscribes, from their own phone. Google keeps 15% of subscription revenue.
+- **Free:** SOS, check-ins, call requests, photo notes, call shield, 4 contacts, 3 AI checks a day.
+- **Premium:** safety alerts, ring phone / ringer on, remote control, medicine tracking, fall
+  detection, health readings, unlimited contacts and AI.
+- **Fees:** Google keeps 15%.
+- **Referral links:** recommended watches on `/devices` earn a small extra (for now through a
+  partner's Amazon Associates account).
 
-Full production docs: [`docs/OPERATIONS.md`](docs/OPERATIONS.md) (email, domain, Firebase, Play Console,
-admin panel, releases, monitoring) · app screen previews: [`docs/app-preview.html`](docs/app-preview.html).
-
-## Project map
+## Repository
 
 ```
-app/src/main/java/com/lusanetech/warmhearth/
-  MainActivity.kt          senior-side navigation (flat screen enum, Home button always returns home)
-  WarmHearthApp.kt         app start, tiny dependency container (Graph)
-  ui/                      design system: Theme (colours, type, shapes, spacing), shared components
-  launcher/                home screen, all-apps list
-  calls/                   big dialer, photo contacts, contact editor, scam call shield
-  sos/                     hold-to-SOS, location, SMS share
-  fall/                    accelerometer fall detection service + "Did you fall?" screen
-  meds/                    alarms, full-screen reminder, medicine screens
-  ai/                      Gemini calls + quota, scam checker, read-it-to-me, camera, voice, text-to-speech
-  family/                  Firebase sync, pairing, family-mode app (dashboard, manage screens), push messages
-  health/                  Health Connect readings (watch / band), consent, sync
-  safety/                  phone status reports, remote commands (ring / ringer on), "find my phone" alert
-  billing/                 Play Billing + paywall
-  settings/                PIN, settings, home-screen buttons
-firebase/                  Firestore + Storage rules, Cloud Functions (alerts, safety watch, billing, tickets, emails)
-store-listing/             Play listing in English & Hindi (keyword-researched)
-tools/play-aso/            Play Store keyword scorers used for the listing
-.claude/skills/            17 design, Android and Play Store skills for Claude Code
+app/            Android app (see docs/HANDOVER.md §5 for every package)
+firebase/       Firestore + Storage rules, indexes/TTL, Cloud Functions (Node 22) + tests
+web-src/        website source (pages, phone mock-ups, devices.json) → build.py → web/
+web/            built website + admin panel (web/admin)
+store-listing/  Play listing copy
+tools/play-aso/ Play keyword scorer used for the title
+docs/           handover, operations, compliance, data safety, screenshots
+.claude/skills/ design, Android and ASO skills used while building
 ```
 
-## Setup (about 30 minutes, once)
+## Get it running
 
-### 1. Firebase
-1. Create a project at console.firebase.google.com → add an **Android app** with package
-   `com.lusanetech.warmhearth` → download `google-services.json` into `app/`.
-2. **Authentication** → enable **Anonymous**.
-3. **Firestore** → create database (region `asia-south1` recommended).
-4. **AI Logic** → get started → choose **Gemini Developer API**.
-5. **App Check** → register the app with **Play Integrity** (add your app's SHA-256 later from Play Console).
-6. Upgrade to the **Blaze** plan (needed for the Cloud Function; the free quota covers a small app).
-7. Deploy rules and the function:
+1. **Android:** open the folder in Android Studio (latest stable). Put `google-services.json` in
+   `app/`, let Gradle sync, and fix any first-compile errors. Run it on two phones: one in senior
+   mode, one in family mode, linked with the code.
+2. **Backend:** follow `docs/OPERATIONS.md` §2–3:
    ```bash
-   npm i -g firebase-tools && firebase login
-   cd firebase && npm --prefix functions install
-   firebase use --add            # pick your project
-   firebase deploy --only firestore:rules,functions
+   cd firebase/functions && npm install && npm test
+   cd ../ && firebase deploy --only firestore,storage,functions,hosting
    ```
+3. **Website:** `cd web-src && npm install && npm run build`. Hosting deploys `web/`.
+4. **Play Console:** create the subscription and fill in the forms listed in
+   `docs/PLAY_COMPLIANCE.md` §2. Start with internal testing, then closed testing.
 
-### 2. Android Studio
-1. Open the folder in Android Studio (latest stable) and let Gradle sync.
-2. Set `SUPPORT_EMAIL` in `ai/AiScreens.kt` (Play requires a way to report AI answers).
-3. Run on a real phone. Test: onboarding → set as home → add a contact → SOS → medicine alarm.
-4. On a second phone choose **I'm a family member** and link with the code from Settings → Link a family member's phone.
-
-### 3. Play Console
-1. Create the app (one-time $25 developer fee).
-2. **Monetize → Subscriptions** → create `warmhearth_premium` with `monthly` and `yearly` base plans and a 7-day trial (details in docs/OPERATIONS.md).
-3. Store listing: copy from `store-listing/en-US.md` and `store-listing/hi-IN.md`.
-4. App content declarations you will be asked for:
-   - **Foreground service: health**: fall detection (accelerometer).
-   - **Full-screen intent**: medicine alarms and fall alerts.
-   - **Exact alarms**: medicine reminders (the app asks the user; it falls back gracefully).
-   - **Data safety**: location (SOS only, shared with linked family), contacts the user enters, photos stay on device, messages/photos sent to Google's Gemini only when the user taps Check/Read.
-   - **AI-generated content**: in-app "Report a wrong answer" link is included.
-5. Start with **closed testing** (Play requires 12 testers for 14 days on new personal accounts).
+### Placeholders to fill before launch
+- Proprietor's legal name and address: `firebase/functions/src/config.js` and `web-src/build.py`.
+- Firebase web config: `web-src/js/firebase-config.js`.
+- Amazon tracking IDs, from the partner account: `web-src/build.py` (`amazon_tag_in`, `amazon_tag_us`).
 
 ## Keyword research
 
 ```bash
 cd tools/play-aso && npm install
 node title.mjs us en "elderly launcher" "senior launcher" "big launcher"   # live scores
-node score.mjs                                                             # long-tail expansion from seeds.json
 ```
-Results from 25 Oct 2026 are in `store-listing/en-US.md`.
-
-## Before scaling (known TODOs)
-- Verify purchases server-side (Cloud Function + Play Developer API) before trusting `premium`.
-- Replace the placeholder launcher icon and make the 1024×500 feature graphic.
-- Add Play In-App Review prompt after a success moment (first SOS test or 7 days of medicines taken).
-- Silent SOS SMS needs the restricted `SEND_SMS` permission and a Play declaration; today SOS uses push + call + SMS composer.
+Results and where each keyword is used: `store-listing/en-US.md`.

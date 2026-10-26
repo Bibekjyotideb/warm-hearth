@@ -56,6 +56,10 @@ data class Settings(
     val medTone: String,
     /** The senior agreed to share watch / band readings (Health Connect) with linked family. */
     val vitalsShared: Boolean,
+    /** Phone status (battery, ringer, last used) shared with linked family; the senior can turn it off without the PIN. */
+    val statusShared: Boolean,
+    /** When the senior agreed to what linked family can see and do (shown before the first pairing code). 0 = not yet. */
+    val sharingConsentAt: Long,
 )
 
 object CallShieldMode {
@@ -84,6 +88,8 @@ class Prefs(private val context: Context) {
         val VOICE = booleanPreferencesKey("voice_commands")
         val MED_TONE = stringPreferencesKey("med_tone")
         val VITALS = booleanPreferencesKey("vitals_shared")
+        val STATUS = booleanPreferencesKey("status_shared")
+        val CONSENT = longPreferencesKey("sharing_consent_at")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { it.toSettings() }
@@ -108,6 +114,8 @@ class Prefs(private val context: Context) {
         voiceCommands = this[K.VOICE] ?: true,
         medTone = this[K.MED_TONE] ?: "alarm",
         vitalsShared = this[K.VITALS] ?: false,
+        statusShared = this[K.STATUS] ?: true,
+        sharingConsentAt = this[K.CONSENT] ?: 0L,
     )
 
     /** Stable random id for this phone, created once. Used as the Firestore device document id. */
@@ -133,6 +141,8 @@ class Prefs(private val context: Context) {
     suspend fun setVoiceCommands(value: Boolean) = context.dataStore.edit { it[K.VOICE] = value }
     suspend fun setMedTone(value: String) = context.dataStore.edit { it[K.MED_TONE] = value }
     suspend fun setVitalsShared(value: Boolean) = context.dataStore.edit { it[K.VITALS] = value }
+    suspend fun setStatusShared(value: Boolean) = context.dataStore.edit { it[K.STATUS] = value }
+    suspend fun setSharingConsent(at: Long) = context.dataStore.edit { it[K.CONSENT] = at; it[K.STATUS] = true }
 
     /** Marks local changes as the newest, so their echo from Firestore isn't re-applied. */
     suspend fun markApplied(updatedAt: Long) = context.dataStore.edit { it[K.APPLIED] = updatedAt }

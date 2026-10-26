@@ -24,7 +24,9 @@ SITE = {
     "privacy_contact": "support@lusanetech.com",
     "play": "https://play.google.com/store/apps/details?id=com.lusanetech.warmhearth",
     "updated": "26 October 2026",
-    # Affiliate tags (Amazon Associates). Leave empty until approved; links still work without them.
+    # Affiliate tracking IDs (Amazon Associates), currently the partner account (owner's brother).
+    # That account must list warmhearth.lusanetech.com under Account settings → Website and mobile app list.
+    # Leave empty and the links still work, just without commission.
     "amazon_tag_in": "",
     "amazon_tag_us": "",
     # Illustration used as the "photo from family" on screens (no real people's photos on the site).

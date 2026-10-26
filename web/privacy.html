@@ -53,7 +53,6 @@
 <tr><td>Contact and medicine photos taken on the senior's phone</td><td>Senior</td><td>Show faces and pill photos</td><td><strong>Only on the phone.</strong> Never uploaded.</td></tr>
 <tr><td>Medicine names, doses and times; whether each dose was taken or missed</td><td>Senior</td><td>Reminders, missed-dose alerts, and "today's medicines" on the family's phone</td><td>Synced to our database for linked family; dose records deleted after 90 days</td></tr>
 <tr><td>Phone status: battery level, charging, ringer mode and volume, Do Not Disturb, network type (Wi-Fi / mobile), time zone, when the phone was last used, number of unknown calls screened today</td><td>Senior</td><td>Safety alerts for family (phone on silent, battery low, offline, not used) and the family dashboard</td><td>Our cloud database, overwritten every ~30 minutes. <strong>No messages, call history, browsing or app usage.</strong></td></tr>
-<tr><td>Names of apps with a home-screen icon</td><td>Senior's phone</td><td>So family can choose which apps appear on the home screen</td><td>Our cloud database, refreshed daily</td></tr>
 <tr><td>Daily "I'm OK" check-ins and "call me" requests</td><td>Senior</td><td>Tell linked family they're fine or want a call</td><td>Sent to linked family; kept 90 days</td></tr>
 <tr><td>Photos of contacts and medicines added from the family app</td><td>Family member</td><td>Show on the senior's call buttons and medicine reminders</td><td>Firebase Storage until replaced or removed; a copy is kept on the senior's phone</td></tr>
 <tr><td>Photos and notes sent by family</td><td>Family member (and anyone in the photo)</td><td>Show them on the senior's home screen</td><td>Firebase Storage and our database; <strong>deleted after 30 days</strong>, or earlier by the sender</td></tr>
@@ -74,7 +73,8 @@
 <p>We process data with your consent (given in the app, for example when allowing location or linking family), to perform our contract with you (providing the app and the features you bought), to meet legal obligations (tax and payment records), and for our legitimate interest in keeping the app secure and working. Under India's Digital Personal Data Protection Act, 2023, we act as the Data Fiduciary.</p>
 
 <h2>3. Family linking and consent</h2>
-<p>Linking lets a family member see and edit the senior's contacts, medicine list and settings, see the phone's status and today's doses, ring the phone or turn its ringer on, send photos and notes, and receive alerts. A link only happens when a code shown on the senior's phone is typed into the family member's phone. Family members must only link with the senior's knowledge and agreement. A link can be removed at any time by contacting us or by deleting the account.</p>
+<p>Linking lets a family member see and edit the senior's contacts, medicine list and settings, see the phone's status and today's doses, ring the phone or turn its ringer on, send photos and notes, and receive alerts. A link only happens when a code shown on the senior's phone is typed into the family member's phone, and the code is only shown after the senior has read what family will see and do and tapped "I agree". Family members must only link with the senior's knowledge and agreement.</p>
+<p>The senior stays in control on their own phone, without needing the settings PIN: <strong>home screen → settings button → Privacy &amp; sharing</strong> shows what is shared and lets them stop sharing the phone's status, stop sharing watch readings, or unlink every family member at once. WarmHearth is a tool for a person to share safety information with family they choose. It is not designed or marketed to watch someone without their knowledge, and using it that way breaks our terms.</p>
 
 <h2>4. Who we share data with</h2>
 <p>We use these service providers, who process data on our behalf under their own security and privacy terms:</p>
@@ -100,10 +100,11 @@
 
 <h2>6. Your rights</h2>
 <p>You can ask to access, correct or delete your data, withdraw consent, or name someone to exercise your rights if you cannot. Family members can delete their account in the app (Settings → Delete my account) or at <a href="/delete-account">warmhearth.lusanetech.com/delete-account</a>. To erase a senior's phone data, use the same page or uninstall the app and contact us. If you are in the EU, UK or California, you also have the rights given by the GDPR, UK GDPR or CCPA, including objecting to processing and complaining to your data protection authority.</p>
-<p>We answer requests within 30 days.</p>
+<p>We answer requests within 30 days. Under India's Digital Personal Data Protection Act, 2023 and the DPDP Rules, 2025, you can also withdraw consent as easily as you gave it (see "Privacy &amp; sharing" above), and complain to our grievance officer (section 10) and then to the Data Protection Board of India.</p>
 
 <h2>7. Security</h2>
-<p>Data is encrypted in transit (HTTPS/TLS) and at rest in Google Cloud. Database access is restricted by security rules so that only the phone's owner and linked family can read it. App Check blocks unofficial copies of the app from our servers. No system is perfectly secure; if a breach affects you, we will tell you and the authorities as the law requires.</p>
+<p>Data is encrypted in transit (HTTPS/TLS) and at rest in Google Cloud. Database access is restricted by security rules so that only the phone's owner and linked family can read it. App Check blocks unofficial copies of the app from our servers. No system is perfectly secure; if a personal data breach affects you, we will tell you without delay (what happened, when, the likely impact, what we've done and what you can do) and report it to the Data Protection Board of India and other authorities as the law requires.</p>
+<p>We do not use advertising identifiers, show ads, or use any health data for advertising or product suggestions.</p>
 
 <h2>8. Children</h2>
 <p>WarmHearth is meant for adults. We do not knowingly collect data from children under 18. If you believe a child has given us data, contact us and we will delete it.</p>

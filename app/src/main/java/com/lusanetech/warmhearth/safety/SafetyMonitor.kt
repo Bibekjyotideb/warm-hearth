@@ -122,6 +122,8 @@ object SafetyMonitor {
         run {
             val settings = graph.prefs.current()
             if (settings.mode != AppMode.SENIOR || settings.deviceId.isBlank()) return
+            // The senior can switch status sharing off at any time (Privacy & sharing, no PIN needed).
+            if (!settings.statusShared || !settings.paired) return
             if (graph.family.uid() == null) return
 
             val am = c.getSystemService(AudioManager::class.java)
@@ -163,12 +165,10 @@ object SafetyMonitor {
                 "fallDetection" to (settings.fallDetection && settings.premium),
                 "reportedAt" to FieldValue.serverTimestamp(),
             )
-            // Names of apps with a home-screen icon, once a day, so the family can pick tiles remotely.
-            if (s.getString("apps_day", "") != today()) {
-                status["installedApps"] = Apps.load(c).take(80).map { mapOf("pkg" to it.packageName, "label" to it.label) }
-                // Reminder sounds on this phone, so the family can pick one per medicine.
+            // Reminder sounds on this phone (system sound names only), so the family can pick one per medicine.
+            if (s.getString("tones_day", "") != today()) {
                 status["tones"] = com.lusanetech.warmhearth.util.Tones.list(c).map { mapOf("title" to it.first, "uri" to it.second) }
-                s.edit().putString("apps_day", today()).apply()
+                s.edit().putString("tones_day", today()).apply()
             }
             val write = FirebaseFirestore.getInstance().collection("devices").document(settings.deviceId)
                 .set(mapOf("status" to status), SetOptions.merge())

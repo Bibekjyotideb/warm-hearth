@@ -423,7 +423,7 @@
     <string name="see_prices">See prices</string>
     <string name="shop_intro">These send readings to WarmHearth through Health Connect. Set the watch up on your parent\'s phone with its own app, then turn on sharing in WarmHearth Settings.</string>
     <string name="shop_check_note">Many budget brands only sync to their own app. Before buying another brand, check that its app lists Health Connect.</string>
-    <string name="shop_disclosure">We may earn a small commission if you buy through these links. It doesn\'t change the price you pay, and the list is the same for everyone.</string>
+    <string name="shop_disclosure">These are affiliate links: our affiliate partner may earn a small commission if you buy, at no extra cost to you. The list is the same for everyone and never based on health data.</string>
     <string name="show_on_home">Show on home screen</string>
     <string name="show_on_home_sub">As a big photo button to call</string>
     <string name="sos_contact_sub">Called first when SOS is pressed</string>
@@ -458,4 +458,33 @@
     <string name="vt_watch">their watch</string>
     <string name="which_watch">Which watch to buy?</string>
     <string name="which_watch_sub">Watches and bands that work with WarmHearth</string>
+
+    <!-- v1.2.1: sharing consent, privacy without PIN, in-app AI reporting -->
+    <string name="share_sees_title">Your linked family will see</string>
+    <string name="share_sees_status">How your phone is: battery, whether it\'s on silent, and when it was last used. Never your messages, calls, photos or which apps you use.</string>
+    <string name="share_sees_checkin">When you tap \"I\'m OK\" or ask them to call you.</string>
+    <string name="share_sees_meds">Your medicine list and whether each dose was taken.</string>
+    <string name="share_sees_location">Your location, only when you press SOS or a fall is detected.</string>
+    <string name="share_sees_health">Watch readings, only if you turn that on separately.</string>
+    <string name="share_does_title">They will be able to</string>
+    <string name="share_does_settings">Change your contacts, medicines and phone settings for you.</string>
+    <string name="share_does_ring">Ring your phone loudly or turn the ringer back on when they can\'t reach you.</string>
+    <string name="share_never">WarmHearth never sells your data or shows ads.</string>
+    <string name="share_consent_intro">Before you link a family member\'s phone, here\'s exactly what it means.</string>
+    <string name="share_consent_stop">You can see this again and stop sharing or unlink everyone at any time: tap the settings button on the home screen, then \"Privacy &amp; sharing\". No PIN needed.</string>
+    <string name="share_agree">I agree, show the code</string>
+    <string name="privacy_sharing">Privacy &amp; sharing</string>
+    <string name="privacy_sharing_no_pin">Privacy &amp; sharing (no PIN needed)</string>
+    <string name="share_linked_yes">Your phone is linked to family.</string>
+    <string name="share_linked_no">Your phone isn\'t linked to anyone.</string>
+    <string name="share_status_toggle">Share how my phone is</string>
+    <string name="share_status_toggle_sub">Battery, silent mode, last used. Needed for safety alerts.</string>
+    <string name="share_health_on">Watch readings are being shared</string>
+    <string name="unlink_all">Unlink all family</string>
+    <string name="unlink_all_body">Their phones will stop seeing anything from this phone and can\'t change it. You can link again later with a new code.</string>
+    <string name="unlink">Unlink</string>
+    <string name="report_thanks">Thanks, we\'ll look at this answer.</string>
+    <string name="report_wrong">The answer is wrong</string>
+    <string name="report_harmful">The answer could cause harm</string>
+    <string name="report_offensive">The answer is offensive</string>
 </resources>

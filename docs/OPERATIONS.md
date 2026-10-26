@@ -249,6 +249,10 @@ Add a teammate later the same way. Remove access with the Firebase Admin SDK or 
 | Firestore rules: premium only by server, admin claim | Done |
 | App Check (Play Integrity) | Done in code; enforce in console after testing |
 | Crashlytics, Analytics, funnel telemetry | Done |
+| Consent before pairing; Privacy & sharing without PIN | Done |
+| In-app AI answer reporting (no email needed) | Done |
+| No advertising ID | Done |
+| Play Console declarations | See `docs/PLAY_COMPLIANCE.md` §2 |
 | Remote Config kill switches + forced updates | Done |
 | Support tickets: app, website, email, admin replies | Done |
 | Transactional emails via Zoho aliases | Done (needs SMTP secrets) |
@@ -270,14 +274,25 @@ Health Connect instead. In Play Console → App content, fill in the Health Conn
 keep `vitals_enabled = false` in Remote Config for production users.
 
 **Referral links.** The family app's "Which watch to buy?" opens `warmhearth.lusanetech.com/devices`,
-which holds the affiliate links and the disclosure (cleanest for Play policy and for the affiliate
-programme's rules).
-1. Apply to **Amazon Associates India** (affiliate-program.amazon.in) and, for other countries,
-   **Amazon Associates US**. They want a live website with content: `/devices` is that page.
-2. Put your tracking IDs in `web-src/build.py` → `SITE["amazon_tag_in"]` / `["amazon_tag_us"]`,
-   rebuild and deploy hosting. Links become `amazon.in/s?k=…&tag=yourtag-21`.
-3. Optional: Flipkart Affiliate or an aggregator (EarnKaro, Cuelinks) for more stores: change the
-   `href` pattern in `devices_html()`.
-4. Update the list any time in `web-src/data/devices.json` (website) and `shop_json` (app).
+which holds the affiliate links and the disclosure.
+- **For now the links use your brother's existing Amazon Associates account** (your own account
+  would be closed after 180 days without sales; apply for your own once there are users).
+- He must add `warmhearth.lusanetech.com` under Associates Central → Account settings →
+  **Website and mobile app list**, otherwise the links break Amazon's agreement.
+- Put his tracking ID(s) in `web-src/build.py` → `SITE["amazon_tag_in"]` (amazon.in, ends in `-21`)
+  and `SITE["amazon_tag_us"]` (amazon.com, ends in `-20`), then `npm run build` and deploy hosting.
+- Update products in `web-src/data/devices.json` (website) and Remote Config `shop_json` (app).
 Rules to keep: the list is the same for everyone and never based on health data (Health Connect
 policy), every page with links shows the disclosure, links say "(affiliate link)".
+
+---
+
+## 10. If something goes wrong with personal data (breach response)
+
+1. Contain: rotate the Zoho app password / Firebase keys involved, tighten rules, disable the feature
+   with a Remote Config kill switch.
+2. Record what happened, when, what data and whose (keep notes; DPDP Rules require logs).
+3. Tell affected users without delay (email + the in-app banner `announcement_*`): what happened,
+   when, likely impact, what you've done, what they should do, who to contact.
+4. Report to the Data Protection Board of India (and CERT-In within 6 hours for reportable cyber
+   incidents). Get legal help for the wording.

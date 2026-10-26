@@ -108,6 +108,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
                     Icons.Filled.FamilyRestroom, Tone.Green,
                     subtitle = stringResource(R.string.link_family_sub),
                 ) { onOpen(Screen.PAIRING) }
+                NavRow(stringResource(R.string.privacy_sharing), Icons.Filled.Lock, Tone.Grey) { onOpen(Screen.SHARING) }
             }
 
             // Text size

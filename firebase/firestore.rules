@@ -135,6 +135,7 @@ service cloud.firestore {
 
     match /subscriptions/{token} { allow read: if isAdmin(); }
     match /stats/{day} { allow read: if isAdmin(); }
+    match /aiReports/{id} { allow read, update: if isAdmin(); }
     // rateLimits, alertState: server only (no client rule = denied)
   }
 }

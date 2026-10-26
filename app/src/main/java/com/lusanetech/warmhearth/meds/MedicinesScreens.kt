@@ -152,6 +152,7 @@ fun EditMedicinesScreen(onBack: () -> Unit) {
     var editing by remember { mutableStateOf<Medicine?>(null) }
     var scanning by remember { mutableStateOf(false) }
     var scanFailed by remember { mutableStateOf(false) }
+    var lastScan by remember { mutableStateOf<String?>(null) }
 
     // AI: photograph the medicine box, the name and dose are filled in for you to check.
     val scan = rememberTakePhoto { bmp ->
@@ -160,7 +161,10 @@ fun EditMedicinesScreen(onBack: () -> Unit) {
             val id = UUID.randomUUID().toString()
             val photo = PhotoStore.saveBitmap(context, bmp, id)
             when (val r = AiHelper.readMedicine(context, bmp)) {
-                is AiHelper.Result.Ok -> editing = Medicine(id = id, name = r.value.name, dose = r.value.dose, photoPath = photo, times = "08:00")
+                is AiHelper.Result.Ok -> {
+                    lastScan = "${r.value.name} ${r.value.dose}".trim()
+                    editing = Medicine(id = id, name = r.value.name, dose = r.value.dose, photoPath = photo, times = "08:00")
+                }
                 else -> { scanFailed = true; editing = Medicine(id = id, name = "", photoPath = photo, times = "08:00") }
             }
             scanning = false
@@ -171,6 +175,7 @@ fun EditMedicinesScreen(onBack: () -> Unit) {
         BigButton(stringResource(R.string.scan_medicine), icon = Icons.Filled.DocumentScanner, color = Palette.Purple, enabled = !scanning) { scan() }
         if (scanning) Text(stringResource(R.string.ai_thinking), style = MaterialTheme.typography.titleMedium)
         if (scanFailed) Text(stringResource(R.string.scan_failed), color = Palette.Red)
+        lastScan?.let { com.lusanetech.warmhearth.ai.ReportAnswerLink("medicine", it) }
         Spacer(Modifier.height(8.dp))
         BigButton(stringResource(R.string.add_medicine), icon = Icons.Filled.Add, color = Palette.Orange) {
             editing = Medicine(id = UUID.randomUUID().toString(), name = "", times = "08:00")

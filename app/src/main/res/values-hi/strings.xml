@@ -412,7 +412,7 @@
     <string name="see_prices">दाम देखें</string>
     <string name="shop_intro">ये Health Connect के ज़रिए WarmHearth को रीडिंग भेजती हैं। घड़ी को उसके अपने ऐप से माता-पिता के फ़ोन पर सेट करें, फिर WarmHearth सेटिंग्स में साझा करना चालू करें।</string>
     <string name="shop_check_note">कई सस्ते ब्रांड सिर्फ़ अपने ऐप में डेटा रखते हैं। दूसरा ब्रांड लेने से पहले देखें कि उसके ऐप में Health Connect है।</string>
-    <string name="shop_disclosure">इन लिंक से ख़रीदने पर हमें छोटा कमीशन मिल सकता है। इससे आपकी क़ीमत नहीं बदलती, और सूची सभी के लिए एक जैसी है।</string>
+    <string name="shop_disclosure">ये एफ़िलिएट लिंक हैं: ख़रीदने पर हमारे एफ़िलिएट पार्टनर को छोटा कमीशन मिल सकता है, आपको कोई अतिरिक्त ख़र्च नहीं। सूची सभी के लिए एक जैसी है और कभी सेहत के डेटा पर आधारित नहीं।</string>
     <string name="show_on_home">होम स्क्रीन पर दिखाएं</string>
     <string name="show_on_home_sub">कॉल करने के बड़े फ़ोटो बटन की तरह</string>
     <string name="sos_contact_sub">SOS दबाने पर सबसे पहले इन्हें कॉल</string>
@@ -447,4 +447,33 @@
     <string name="vt_watch">उनकी घड़ी</string>
     <string name="which_watch">कौन सी घड़ी लें?</string>
     <string name="which_watch_sub">WarmHearth के साथ चलने वाली घड़ियाँ और बैंड</string>
+
+    <!-- v1.2.1: sharing consent, privacy without PIN, in-app AI reporting -->
+    <string name="share_sees_title">जुड़ा हुआ परिवार देखेगा</string>
+    <string name="share_sees_status">आपका फ़ोन कैसा है: बैटरी, साइलेंट पर है या नहीं, और आख़िरी बार कब इस्तेमाल हुआ। आपके संदेश, कॉल, फ़ोटो या कौन से ऐप इस्तेमाल करते हैं, कभी नहीं।</string>
+    <string name="share_sees_checkin">जब आप \"मैं ठीक हूँ\" दबाते हैं या फ़ोन करने को कहते हैं।</string>
+    <string name="share_sees_meds">आपकी दवाओं की सूची और हर खुराक ली गई या नहीं।</string>
+    <string name="share_sees_location">आपकी लोकेशन, सिर्फ़ जब आप SOS दबाएं या गिरने का पता चले।</string>
+    <string name="share_sees_health">घड़ी की रीडिंग, सिर्फ़ अगर आप उसे अलग से चालू करें।</string>
+    <string name="share_does_title">वे कर पाएंगे</string>
+    <string name="share_does_settings">आपके लिए आपके संपर्क, दवाइयाँ और फ़ोन की सेटिंग बदलना।</string>
+    <string name="share_does_ring">जब आप तक न पहुँच पाएं तो आपका फ़ोन ज़ोर से बजाना या रिंगर वापस चालू करना।</string>
+    <string name="share_never">WarmHearth कभी आपका डेटा नहीं बेचता और विज्ञापन नहीं दिखाता।</string>
+    <string name="share_consent_intro">परिवार के सदस्य का फ़ोन जोड़ने से पहले, जानिए इसका मतलब क्या है।</string>
+    <string name="share_consent_stop">आप इसे फिर देख सकते हैं और कभी भी साझा करना बंद या सभी को हटा सकते हैं: होम स्क्रीन पर सेटिंग बटन दबाएं, फिर \"निजता और साझा करना\"। PIN की ज़रूरत नहीं।</string>
+    <string name="share_agree">मैं सहमत हूँ, कोड दिखाएं</string>
+    <string name="privacy_sharing">निजता और साझा करना</string>
+    <string name="privacy_sharing_no_pin">निजता और साझा करना (PIN नहीं चाहिए)</string>
+    <string name="share_linked_yes">आपका फ़ोन परिवार से जुड़ा है।</string>
+    <string name="share_linked_no">आपका फ़ोन किसी से नहीं जुड़ा।</string>
+    <string name="share_status_toggle">मेरा फ़ोन कैसा है, साझा करें</string>
+    <string name="share_status_toggle_sub">बैटरी, साइलेंट, आख़िरी इस्तेमाल। सुरक्षा अलर्ट के लिए ज़रूरी।</string>
+    <string name="share_health_on">घड़ी की रीडिंग साझा हो रही है</string>
+    <string name="unlink_all">सभी परिवार वालों को हटाएं</string>
+    <string name="unlink_all_body">उनके फ़ोन इस फ़ोन से कुछ नहीं देख पाएंगे और इसे बदल नहीं पाएंगे। बाद में नए कोड से फिर जोड़ सकते हैं।</string>
+    <string name="unlink">हटाएं</string>
+    <string name="report_thanks">धन्यवाद, हम यह जवाब देखेंगे।</string>
+    <string name="report_wrong">जवाब ग़लत है</string>
+    <string name="report_harmful">जवाब नुकसान कर सकता है</string>
+    <string name="report_offensive">जवाब आपत्तिजनक है</string>
 </resources>

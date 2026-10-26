@@ -57,9 +57,8 @@ import com.lusanetech.warmhearth.ui.Page
 import com.lusanetech.warmhearth.ui.Palette
 import com.lusanetech.warmhearth.ui.Spacing
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-/** Set this to your support address: Google Play requires a way to report bad AI answers. */
-const val SUPPORT_EMAIL = "support@example.com"
 
 /** "Is this a scam?" Paste or share a message; get a red / orange / green answer read aloud. */
 @Composable
@@ -149,7 +148,7 @@ private fun VerdictCard(v: AiHelper.ScamVerdict, onSpeak: () -> Unit) {
             Text(stringResource(R.string.read_aloud), color = Color.White, style = MaterialTheme.typography.titleMedium)
         }
     }
-    ReportAnswerLink()
+    ReportAnswerLink("scam", v.explanation + "\n" + v.advice)
 }
 
 /** "Read it to me": photograph a letter or bill, hear a simple explanation. */
@@ -206,7 +205,7 @@ fun ReadItScreen(onBack: () -> Unit, onNeedPremium: () -> Unit) {
                     BigButton(stringResource(R.string.read_aloud), icon = Icons.AutoMirrored.Filled.VolumeUp, color = Palette.Green) {
                         speaker.speak(answer!!)
                     }
-                    ReportAnswerLink()
+                    ReportAnswerLink("read", answer!!)
                 }
             }
             Text(stringResource(R.string.ai_disclaimer), style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft)
@@ -214,18 +213,43 @@ fun ReadItScreen(onBack: () -> Unit, onNeedPremium: () -> Unit) {
     }
 }
 
-/** Google Play's AI-content policy asks for an in-app way to flag a bad answer. */
+/**
+ * Google Play's AI-generated content policy: flag a bad answer without leaving the app.
+ * Sends only the AI's answer (not the message or photo that was checked) to reportAiAnswer.
+ */
 @Composable
-fun ReportAnswerLink() {
+fun ReportAnswerLink(feature: String, answer: String) {
     val context = LocalContext.current
-    TextButton(onClick = { reportAnswer(context) }) {
-        Text(stringResource(R.string.report_answer), color = Palette.InkSoft)
+    val scope = rememberCoroutineScope()
+    var asking by remember { mutableStateOf(false) }
+    var sent by remember(answer) { mutableStateOf(false) }
+    if (sent) {
+        Text(stringResource(R.string.report_thanks), color = Palette.InkSoft, style = MaterialTheme.typography.bodyMedium)
+        return
     }
-}
-
-private fun reportAnswer(context: Context) {
-    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$SUPPORT_EMAIL"))
-        .putExtra(Intent.EXTRA_SUBJECT, "WarmHearth: problem with an AI answer")
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    runCatching { context.startActivity(intent) }
+    TextButton(onClick = { asking = true }) { Text(stringResource(R.string.report_answer), color = Palette.InkSoft) }
+    if (asking) {
+        val reasons = listOf("wrong" to R.string.report_wrong, "harmful" to R.string.report_harmful, "offensive" to R.string.report_offensive)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { asking = false },
+            title = { Text(stringResource(R.string.report_answer)) },
+            text = {
+                Column {
+                    reasons.forEach { (key, label) ->
+                        TextButton(onClick = {
+                            asking = false; sent = true
+                            scope.launch {
+                                runCatching {
+                                    com.google.firebase.functions.FirebaseFunctions.getInstance("asia-south1").getHttpsCallable("reportAiAnswer")
+                                        .call(mapOf("feature" to feature, "reason" to key, "answer" to answer.take(2000), "appVersion" to com.lusanetech.warmhearth.BuildConfig.VERSION_NAME))
+                                        .await()
+                                }
+                            }
+                        }) { Text(stringResource(label), style = MaterialTheme.typography.titleMedium) }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }

@@ -66,9 +66,9 @@ WarmHearth Premium (monthly or yearly, 7-day free trial, covers every parent you
 
 Privacy: the family sees how the phone is (battery, ringer, last used), never what's on it. No ads, no data selling.
 
-Whether you call it a senior launcher, old age launcher, big icons launcher or a senior citizen app — WarmHearth is the simple launcher for elderly parents that keeps the whole family close.
+WarmHearth works as a senior launcher, old age launcher or senior citizen app: a simple home screen for elderly parents that keeps the family close.
 
-Download WarmHearth, the elderly launcher families trust, and make your parents' phone simple today.
+Not an emergency service or medical device: SOS and alerts depend on battery and network, and AI answers and watch readings can be wrong.
 
 Note: fall detection and AI answers are helpers, not medical devices or professional advice.
 

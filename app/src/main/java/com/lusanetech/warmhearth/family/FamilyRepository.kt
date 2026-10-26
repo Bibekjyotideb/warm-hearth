@@ -268,6 +268,29 @@ class FamilyRepository(
         return sendEvent("checkin", context.getString(com.lusanetech.warmhearth.R.string.family_checkin, name))
     }
 
+    /** Senior turns phone-status sharing on/off. Off also removes what family can currently see. */
+    suspend fun setStatusSharing(on: Boolean) {
+        prefs.setStatusShared(on)
+        val id = prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return
+        if (on) com.lusanetech.warmhearth.safety.SafetyMonitor.report(context, force = true)
+        else runCatching { device(id).update("status", FieldValue.delete()).await() }
+    }
+
+    /**
+     * Senior removes every linked family member (withdrawing consent). Their phones lose access at
+     * once (Firestore rules check the family list); shared status and readings are removed.
+     */
+    suspend fun unlinkAllFamily(): Boolean {
+        val id = prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return false
+        if (uid() == null) return false
+        return runCatching {
+            device(id).update(mapOf("family" to emptyList<String>(), "status" to FieldValue.delete(), "vitals" to FieldValue.delete())).await()
+            prefs.setPaired(false)
+            prefs.setVitalsShared(false)
+            true
+        }.getOrDefault(false)
+    }
+
     /** "Ask my family to call me". Free on every plan. */
     suspend fun askToBeCalled(): Boolean {
         val name = prefs.current().seniorName.ifBlank { context.getString(com.lusanetech.warmhearth.R.string.your_family_member) }

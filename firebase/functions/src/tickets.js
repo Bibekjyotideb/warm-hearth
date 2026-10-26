@@ -130,3 +130,31 @@ exports.onTicketMessage = onDocumentCreated(
     }
   },
 );
+
+/**
+ * Google Play's AI-generated content policy: users flag a bad AI answer without leaving the app.
+ * Stores the answer (not the user's own message) for review; the admin inbox gets an email.
+ */
+exports.reportAiAnswer = onCall({ region: cfg.REGION, secrets: SMTP_SECRETS }, async (req) => {
+  if (!req.auth) throw new HttpsError("unauthenticated", "Sign-in required.");
+  const db = admin.firestore();
+  const d = req.data || {};
+  const report = {
+    uid: req.auth.uid,
+    feature: ["scam", "read", "medicine"].includes(d.feature) ? d.feature : "other",
+    reason: ["wrong", "harmful", "offensive", "other"].includes(d.reason) ? d.reason : "other",
+    answer: clean(d.answer, 2000),
+    appVersion: clean(d.appVersion, 20) || null,
+    status: "new",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  await rateLimit(db, "ai:" + req.auth.uid);
+  await db.collection("aiReports").add(report);
+  await sendMail({
+    to: cfg.EMAIL.adminInbox, from: "support",
+    subject: `AI answer reported (${report.feature}, ${report.reason})`,
+    text: `An AI answer was reported in the app.\n\nFeature: ${report.feature}\nReason: ${report.reason}\n\nAnswer:\n${report.answer}`,
+    html: `<p>An AI answer was reported in the app.</p><p>Feature: ${report.feature}<br>Reason: ${report.reason}</p><pre style="white-space:pre-wrap">${report.answer.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c])}</pre>`,
+  });
+  return { ok: true };
+});

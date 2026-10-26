@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lusanetech.warmhearth.R
+import kotlinx.coroutines.launch
 import com.lusanetech.warmhearth.graph
 import com.lusanetech.warmhearth.ui.BigButton
 import com.lusanetech.warmhearth.ui.Page
@@ -42,7 +43,9 @@ fun PairingScreen(onBack: () -> Unit) {
     var failed by remember { mutableStateOf(false) }
     var attempt by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(attempt) {
+    val consented = (settings?.sharingConsentAt ?: 0L) > 0L
+    LaunchedEffect(attempt, consented) {
+        if (!consented) return@LaunchedEffect
         failed = false
         code = null
         context.graph.family.startSeniorSync()
@@ -51,6 +54,14 @@ fun PairingScreen(onBack: () -> Unit) {
     }
 
     Page(stringResource(R.string.link_family), onBack = onBack) {
+        if (settings == null) return@Page
+        // Consent first: what linked family will see and be able to do (Play User Data policy, DPDP Act).
+        if (!consented) {
+            com.lusanetech.warmhearth.settings.SharingConsent(onAgree = {
+                context.graph.scope.launch { context.graph.prefs.setSharingConsent(System.currentTimeMillis()) }
+            })
+            return@Page
+        }
         if (settings?.paired == true) {
             Text(stringResource(R.string.family_linked_body), color = Palette.Green, style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(16.dp))

@@ -16,10 +16,9 @@ Matches the privacy policy (`web-src/pages/privacy.html`). Update both together.
 | Photos and videos → Photos | Yes: photos a family member chooses to send to the senior's home screen (deleted after 30 days). Contact/pill photos stay on the device; AI photos processed, not stored | Shared with the linked senior's phone (user-initiated) | Yes | App functionality |
 | Financial info → Purchase history | Yes (order ID, date, country) | No | No | App functionality, fraud prevention |
 | App activity → App interactions | Yes (Analytics events; "last used" time and daily check-ins for family safety alerts) | Check-ins / last used shown to linked family | No | Analytics, app functionality |
-| App activity → Installed apps | Yes (names of launcher apps, so family can pick home-screen tiles) | Shown to linked family | Yes | App functionality |
 | Device or other IDs / diagnostics | Battery, ringer mode, network type, time zone (family safety alerts) | Shown to linked family | Yes | App functionality |
 | App info and performance → Crash logs, Diagnostics | Yes | No | No | Analytics |
-| Device or other IDs | Yes (random device ID, Firebase installation ID) | No | No | App functionality, analytics |
+| Device or other IDs | Yes (random device ID, Firebase installation ID). **No advertising ID** (AD_ID permission removed in the manifest) | No | No | App functionality, analytics |
 
 \* Transfers to service providers (Google Firebase, Gemini, Zoho) are not "sharing" under Play's definition.
 

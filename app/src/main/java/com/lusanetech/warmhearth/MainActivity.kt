@@ -113,7 +113,7 @@ class MainActivity : ComponentActivity() {
 }
 
 /** Every screen of the senior side. Kept as a flat enum: no nested back stacks to get lost in. */
-enum class Screen { HOME, APPS, DIALER, CONTACTS, MEDS, SOS, SCAM, READ, PIN, SETTINGS, EDIT_CONTACTS, EDIT_MEDS, TILES, PAIRING, PAYWALL, SUPPORT }
+enum class Screen { HOME, APPS, DIALER, CONTACTS, MEDS, SOS, SCAM, READ, PIN, SETTINGS, EDIT_CONTACTS, EDIT_MEDS, TILES, PAIRING, PAYWALL, SUPPORT, SHARING }
 
 @Composable
 private fun SeniorApp(s: Settings, openOnStart: String?) {
@@ -154,7 +154,8 @@ private fun SeniorApp(s: Settings, openOnStart: String?) {
         Screen.SOS -> SosScreen(onBack = back)
         Screen.SCAM -> ScamCheckScreen(initialText = scamText, onBack = { scamText = null; back() }, onNeedPremium = openPaywall)
         Screen.READ -> ReadItScreen(onBack = back, onNeedPremium = openPaywall)
-        Screen.PIN -> PinScreen(expected = s.pin, onBack = back, onSuccess = { screen = Screen.SETTINGS })
+        Screen.PIN -> PinScreen(expected = s.pin, onBack = back, onSuccess = { screen = Screen.SETTINGS }, onPrivacy = { screen = Screen.SHARING })
+        Screen.SHARING -> com.lusanetech.warmhearth.settings.SharingScreen(settings = s, onBack = back)
         Screen.SETTINGS -> SettingsScreen(
             settings = s,
             onBack = { screen = Screen.HOME },
