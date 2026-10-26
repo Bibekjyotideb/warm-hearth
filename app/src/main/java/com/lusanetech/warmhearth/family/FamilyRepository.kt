@@ -276,6 +276,14 @@ class FamilyRepository(
         else runCatching { device(id).update("status", FieldValue.delete()).await() }
     }
 
+    /** Senior turns "show when I'm active" on/off. Off removes the last-active time family can see. */
+    suspend fun setActivitySharing(on: Boolean) {
+        prefs.setActivityShared(on)
+        val id = prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return
+        if (!on) runCatching { device(id).update(mapOf("status.lastActiveAt" to FieldValue.delete(), "status.activityShared" to false)).await() }
+        com.lusanetech.warmhearth.safety.SafetyMonitor.report(context, force = true)
+    }
+
     /**
      * Senior removes every linked family member (withdrawing consent). Their phones lose access at
      * once (Firestore rules check the family list); shared status and readings are removed.

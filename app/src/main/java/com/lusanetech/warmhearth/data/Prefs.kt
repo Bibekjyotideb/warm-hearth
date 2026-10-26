@@ -58,6 +58,8 @@ data class Settings(
     val vitalsShared: Boolean,
     /** Phone status (battery, ringer, last used) shared with linked family; the senior can turn it off without the PIN. */
     val statusShared: Boolean,
+    /** "Active recently" (not what was done) shared with family; separate switch, on after consent. */
+    val activityShared: Boolean,
     /** When the senior agreed to what linked family can see and do (shown before the first pairing code). 0 = not yet. */
     val sharingConsentAt: Long,
 )
@@ -90,6 +92,7 @@ class Prefs(private val context: Context) {
         val VITALS = booleanPreferencesKey("vitals_shared")
         val STATUS = booleanPreferencesKey("status_shared")
         val CONSENT = longPreferencesKey("sharing_consent_at")
+        val ACTIVITY = booleanPreferencesKey("activity_shared")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { it.toSettings() }
@@ -115,6 +118,7 @@ class Prefs(private val context: Context) {
         medTone = this[K.MED_TONE] ?: "alarm",
         vitalsShared = this[K.VITALS] ?: false,
         statusShared = this[K.STATUS] ?: true,
+        activityShared = this[K.ACTIVITY] ?: true,
         sharingConsentAt = this[K.CONSENT] ?: 0L,
     )
 
@@ -142,7 +146,8 @@ class Prefs(private val context: Context) {
     suspend fun setMedTone(value: String) = context.dataStore.edit { it[K.MED_TONE] = value }
     suspend fun setVitalsShared(value: Boolean) = context.dataStore.edit { it[K.VITALS] = value }
     suspend fun setStatusShared(value: Boolean) = context.dataStore.edit { it[K.STATUS] = value }
-    suspend fun setSharingConsent(at: Long) = context.dataStore.edit { it[K.CONSENT] = at; it[K.STATUS] = true }
+    suspend fun setActivityShared(value: Boolean) = context.dataStore.edit { it[K.ACTIVITY] = value }
+    suspend fun setSharingConsent(at: Long) = context.dataStore.edit { it[K.CONSENT] = at; it[K.STATUS] = true; it[K.ACTIVITY] = true }
 
     /** Marks local changes as the newest, so their echo from Firestore isn't re-applied. */
     suspend fun markApplied(updatedAt: Long) = context.dataStore.edit { it[K.APPLIED] = updatedAt }

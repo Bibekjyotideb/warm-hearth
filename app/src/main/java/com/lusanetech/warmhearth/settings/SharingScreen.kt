@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ fun SharingDisclosure() {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(stringResource(R.string.share_sees_title), style = MaterialTheme.typography.titleMedium)
         Line(Icons.Filled.BatteryFull, stringResource(R.string.share_sees_status))
+        Line(Icons.Filled.TouchApp, stringResource(R.string.share_sees_active))
         Line(Icons.Filled.CheckCircle, stringResource(R.string.share_sees_checkin))
         Line(Icons.Filled.Medication, stringResource(R.string.share_sees_meds))
         Line(Icons.Filled.LocationOn, stringResource(R.string.share_sees_location))
@@ -121,6 +123,11 @@ fun SharingScreen(settings: Settings, onBack: () -> Unit) {
                         subtitle = stringResource(R.string.share_status_toggle_sub),
                         trailing = { Switch(checked = settings.statusShared, onCheckedChange = { on -> scope.launch { graph.family.setStatusSharing(on) } }) },
                     ) { scope.launch { graph.family.setStatusSharing(!settings.statusShared) } }
+                    NavRow(
+                        stringResource(R.string.share_active_toggle), Icons.Filled.TouchApp, Tone.Green,
+                        subtitle = stringResource(R.string.share_active_toggle_sub),
+                        trailing = { Switch(checked = settings.activityShared, onCheckedChange = { on -> scope.launch { graph.family.setActivitySharing(on) } }) },
+                    ) { scope.launch { graph.family.setActivitySharing(!settings.activityShared) } }
                     if (settings.vitalsShared) NavRow(
                         stringResource(R.string.health_stop), Icons.Filled.Favorite, Tone.Red, subtitle = stringResource(R.string.share_health_on),
                     ) { scope.launch { HealthVitals.stopSharing(context) } }

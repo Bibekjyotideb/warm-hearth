@@ -450,7 +450,7 @@
 
     <!-- v1.2.1: sharing consent, privacy without PIN, in-app AI reporting -->
     <string name="share_sees_title">जुड़ा हुआ परिवार देखेगा</string>
-    <string name="share_sees_status">आपका फ़ोन कैसा है: बैटरी, साइलेंट पर है या नहीं, और आख़िरी बार कब इस्तेमाल हुआ। आपके संदेश, कॉल, फ़ोटो या कौन से ऐप इस्तेमाल करते हैं, कभी नहीं।</string>
+    <string name="share_sees_status">आपका फ़ोन कैसा है: बैटरी और साइलेंट पर है या नहीं। आपके संदेश, कॉल, फ़ोटो या कौन से ऐप इस्तेमाल करते हैं, कभी नहीं।</string>
     <string name="share_sees_checkin">जब आप \"मैं ठीक हूँ\" दबाते हैं या फ़ोन करने को कहते हैं।</string>
     <string name="share_sees_meds">आपकी दवाओं की सूची और हर खुराक ली गई या नहीं।</string>
     <string name="share_sees_location">आपकी लोकेशन, सिर्फ़ जब आप SOS दबाएं या गिरने का पता चले।</string>
@@ -466,8 +466,8 @@
     <string name="privacy_sharing_no_pin">निजता और साझा करना (PIN नहीं चाहिए)</string>
     <string name="share_linked_yes">आपका फ़ोन परिवार से जुड़ा है।</string>
     <string name="share_linked_no">आपका फ़ोन किसी से नहीं जुड़ा।</string>
-    <string name="share_status_toggle">मेरा फ़ोन कैसा है, साझा करें</string>
-    <string name="share_status_toggle_sub">बैटरी, साइलेंट, आख़िरी इस्तेमाल। सुरक्षा अलर्ट के लिए ज़रूरी।</string>
+    <string name="share_status_toggle">बैटरी और रिंगर साझा करें</string>
+    <string name="share_status_toggle_sub">बैटरी और साइलेंट। बैटरी और साइलेंट अलर्ट के लिए ज़रूरी।</string>
     <string name="share_health_on">घड़ी की रीडिंग साझा हो रही है</string>
     <string name="unlink_all">सभी परिवार वालों को हटाएं</string>
     <string name="unlink_all_body">उनके फ़ोन इस फ़ोन से कुछ नहीं देख पाएंगे और इसे बदल नहीं पाएंगे। बाद में नए कोड से फिर जोड़ सकते हैं।</string>
@@ -476,4 +476,12 @@
     <string name="report_wrong">जवाब ग़लत है</string>
     <string name="report_harmful">जवाब नुकसान कर सकता है</string>
     <string name="report_offensive">जवाब आपत्तिजनक है</string>
+    <string name="active_last_hour">पिछले एक घंटे में सक्रिय</string>
+    <string name="active_today">आज पहले सक्रिय</string>
+    <string name="active_since">आख़िरी बार सक्रिय: %1$s</string>
+    <string name="not_shared">साझा नहीं</string>
+    <string name="fact_active">सक्रिय</string>
+    <string name="share_sees_active">क्या आपने हाल में फ़ोन इस्तेमाल किया, सिर्फ़ \"पिछले एक घंटे में सक्रिय\" या \"आज पहले\" जैसा, ताकि उन्हें पता रहे आप ठीक हैं। आपने फ़ोन पर क्या किया, कभी नहीं।</string>
+    <string name="share_active_toggle">मैं सक्रिय हूँ, यह दिखाएं</string>
+    <string name="share_active_toggle_sub">\"फ़ोन इस्तेमाल नहीं हुआ\" अलर्ट के लिए ज़रूरी</string>
 </resources>

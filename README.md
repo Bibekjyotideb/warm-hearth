@@ -14,7 +14,7 @@ One Android app with two modes:
   - A scam call shield, plus AI "Is this a scam?" and "Read it to me".
   - Voice commands, in English and Hindi.
 - **On the son's or daughter's phone:** a dashboard for each parent.
-  - Is the phone OK: battery, on silent, last used.
+  - Is the phone OK: checked in, took medicines, active recently, battery, on silent.
   - Safety alerts, with one-tap "Ring phone" and "Turn ringer on".
   - Today's medicines, taken or missed.
   - Watch readings through Health Connect.

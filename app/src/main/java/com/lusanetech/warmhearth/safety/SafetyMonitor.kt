@@ -156,7 +156,10 @@ object SafetyMonitor {
                 "ringVolume" to volume,
                 "dnd" to dnd,
                 "silentSince" to silentSince.takeIf { it > 0 },
-                "lastActiveAt" to lastActive(c).takeIf { it > 0 },
+                // "Active recently", never what was done. Rounded down to 15 minutes; omitted if the senior
+                // switched it off (then the "phone not used" alert can't fire either).
+                "lastActiveAt" to lastActive(c).takeIf { it > 0 && settings.activityShared }?.let { it - it % (15 * 60_000L) },
+                "activityShared" to settings.activityShared,
                 "network" to network(c),
                 "tz" to TimeZone.getDefault().id,
                 "appVersion" to BuildConfig.VERSION_NAME,

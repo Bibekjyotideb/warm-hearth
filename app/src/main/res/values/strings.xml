@@ -461,7 +461,7 @@
 
     <!-- v1.2.1: sharing consent, privacy without PIN, in-app AI reporting -->
     <string name="share_sees_title">Your linked family will see</string>
-    <string name="share_sees_status">How your phone is: battery, whether it\'s on silent, and when it was last used. Never your messages, calls, photos or which apps you use.</string>
+    <string name="share_sees_status">How your phone is: battery and whether it\'s on silent. Never your messages, calls, photos or which apps you use.</string>
     <string name="share_sees_checkin">When you tap \"I\'m OK\" or ask them to call you.</string>
     <string name="share_sees_meds">Your medicine list and whether each dose was taken.</string>
     <string name="share_sees_location">Your location, only when you press SOS or a fall is detected.</string>
@@ -477,8 +477,8 @@
     <string name="privacy_sharing_no_pin">Privacy &amp; sharing (no PIN needed)</string>
     <string name="share_linked_yes">Your phone is linked to family.</string>
     <string name="share_linked_no">Your phone isn\'t linked to anyone.</string>
-    <string name="share_status_toggle">Share how my phone is</string>
-    <string name="share_status_toggle_sub">Battery, silent mode, last used. Needed for safety alerts.</string>
+    <string name="share_status_toggle">Share battery and ringer</string>
+    <string name="share_status_toggle_sub">Battery and silent mode. Needed for battery and silent alerts.</string>
     <string name="share_health_on">Watch readings are being shared</string>
     <string name="unlink_all">Unlink all family</string>
     <string name="unlink_all_body">Their phones will stop seeing anything from this phone and can\'t change it. You can link again later with a new code.</string>
@@ -487,4 +487,12 @@
     <string name="report_wrong">The answer is wrong</string>
     <string name="report_harmful">The answer could cause harm</string>
     <string name="report_offensive">The answer is offensive</string>
+    <string name="active_last_hour">Active in the last hour</string>
+    <string name="active_today">Active earlier today</string>
+    <string name="active_since">Last active %1$s</string>
+    <string name="not_shared">Not shared</string>
+    <string name="fact_active">Active</string>
+    <string name="share_sees_active">Whether you\'ve used your phone recently, shown only as \"active in the last hour\" or \"earlier today\", so they know you\'re fine. Never what you did on it.</string>
+    <string name="share_active_toggle">Show when I\'m active</string>
+    <string name="share_active_toggle_sub">Needed for the \"phone not used\" alert</string>
 </resources>

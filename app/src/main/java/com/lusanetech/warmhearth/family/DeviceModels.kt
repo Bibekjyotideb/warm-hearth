@@ -117,6 +117,7 @@ data class PhoneStatus(
     /** Alarm / notification sounds available on the senior phone: (title, uri). */
     val tones: List<Pair<String, String>> = emptyList(),
     val fallDetectionOn: Boolean = false,
+    val activityShared: Boolean = true,
 ) {
     val quiet get() = ringer != null && (ringer != "normal" || ringVolume == 0 || dnd)
 
@@ -147,6 +148,7 @@ data class PhoneStatus(
                     (tm["title"] as? String ?: uri) to uri
                 } ?: emptyList(),
                 fallDetectionOn = m["fallDetection"] as? Boolean ?: false,
+                activityShared = m["activityShared"] as? Boolean ?: true,
                 installedApps = (m["installedApps"] as? List<*>)?.mapNotNull { a ->
                     val am = a as? Map<String, Any?> ?: return@mapNotNull null
                     val pkg = am["pkg"] as? String ?: return@mapNotNull null

@@ -92,6 +92,7 @@ parent phone the subscriber links):
 | Safety alerts computed **on the server** (`safetyWatch`, every 15 min) | A dead phone can't report that it died. Rules are pure and unit-tested (`safetyRules.js`). |
 | OTA = Remote Config + In-App Messaging + server rules | Play forbids downloading code; data and switches are fine. See §7. |
 | AI via Firebase AI Logic (Gemini), model name from Remote Config | Swap models without a release; App Check protects the key; paid tier (no training on prompts). |
+| Family sees actions, not activity logs | Check-ins, medicine taken/missed, call requests come from what the senior taps. "Active" is a coarse sign of life (rounded to 15 min, shown as "active in the last hour / earlier today") with its own switch in Privacy & sharing. |
 | Sharing, not monitoring | Play only allows "monitoring apps" for parents→children and employers→employees. WarmHearth is the senior sharing their own safety info, with consent before pairing and **withdrawal without the PIN** (Privacy & sharing). See `docs/PLAY_COMPLIANCE.md` §1. Don't add message/call/browsing/app-usage/continuous-location features. |
 | Health data via **Health Connect** (not Google Fit) | Google Fit APIs end in 2026. Read-only, consented, family-only, 90-day retention, never used for ads or product picks. |
 | Referral links on the **website** (`/devices`), not inside the app | Disclosure sits next to the links, affiliate programme rules are simplest, list is editable without a release. |
@@ -154,7 +155,8 @@ devices/{deviceId}                       one per senior phone (random UUID)
   ownerUid, name, family:[uid], premium*, premiumOrderId*, createdAt, lastPairCode
   lastActiveAt, activeDays, appVersion, model, locale, funnel{…}          (telemetry)
   status{battery, charging, ringer, ringVolume, dnd, silentSince, lastActiveAt, network, tz,
-         callsScreenedToday, canRestoreRinger, fallDetection, tones[], reportedAt}
+         callsScreenedToday, canRestoreRinger, fallDetection, tones[], activityShared, reportedAt}
+         (lastActiveAt rounded down to 15 min; omitted when the senior switches activity sharing off)
   settings{textScale, tiles[], callShield, checkIn{enabled,by,notifyOnOk}, sleep{start,end},
            inactiveHours, alerts{…}, fallDetection, voiceCommands, pin(write-only from family),
            medTone, vitals{hrAlerts,hrHigh,hrLow}, updatedAt}

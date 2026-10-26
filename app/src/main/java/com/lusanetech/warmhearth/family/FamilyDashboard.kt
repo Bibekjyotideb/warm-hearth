@@ -113,8 +113,8 @@ fun assess(c: Context, d: DeviceState, events: List<RemoteEvent>, now: Long = Sy
         return Assessment(Level.ATTENTION, c.getString(R.string.st_no_checkin), c.getString(R.string.st_no_checkin_sub, s.checkInBy))
     }
     val last = st.lastActiveAt
-    if (last != null && now - last > s.inactiveHours * H) return Assessment(Level.ATTENTION, c.getString(R.string.st_inactive, s.inactiveHours), c.getString(R.string.st_used, ago(last)))
-    return Assessment(Level.OK, c.getString(R.string.st_ok), if (last != null) c.getString(R.string.st_used, ago(last)) else c.getString(R.string.st_ok_sub))
+    if (last != null && now - last > s.inactiveHours * H) return Assessment(Level.ATTENTION, c.getString(R.string.st_inactive, s.inactiveHours), activeLabel(c, last, now))
+    return Assessment(Level.OK, c.getString(R.string.st_ok), if (last != null) activeLabel(c, last, now) else c.getString(R.string.st_ok_sub))
 }
 
 /** The parent's time zone (a son in Toronto, a mother in Agartala), falling back to ours. */
@@ -125,6 +125,13 @@ fun checkedInToday(d: DeviceState, now: Long = System.currentTimeMillis()): Bool
     val at = d.lastCheckInAt ?: return false
     val f = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = zoneOf(d.status) }
     return f.format(Date(at)) == f.format(Date(now))
+}
+
+/** "Active in the last hour" / "Active earlier today" / "Last active yesterday": a sign of life, not a log. */
+fun activeLabel(c: Context, ms: Long, now: Long = System.currentTimeMillis()): String = when {
+    now - ms < H -> c.getString(R.string.active_last_hour)
+    DateUtils.isToday(ms) -> c.getString(R.string.active_today)
+    else -> c.getString(R.string.active_since, DateUtils.getRelativeTimeSpanString(ms, now, DateUtils.DAY_IN_MILLIS).toString())
 }
 
 fun ago(ms: Long): String = DateUtils.getRelativeTimeSpanString(ms, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString()
@@ -300,7 +307,11 @@ private fun StatusHero(d: DeviceState, events: List<RemoteEvent>) {
             st.quiet -> stringResource(R.string.fact_ringer_silent)
             else -> stringResource(R.string.fact_ringer_on, st.ringVolume ?: 0)
         }
-        val used = st?.lastActiveAt?.let { ago(it) } ?: "–"
+        val used = when {
+            st?.activityShared == false -> stringResource(R.string.not_shared)
+            st?.lastActiveAt != null -> activeLabel(context, st.lastActiveAt)
+            else -> "–"
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Fact(Modifier.weight(1f), Icons.Filled.TaskAlt, stringResource(R.string.fact_checkin), checkIn, good = checkedInToday(d))
             Fact(Modifier.weight(1f), if (st?.charging == true) Icons.Filled.BatteryChargingFull else if ((st?.battery ?: 100) <= 15) Icons.Filled.BatteryAlert else Icons.Filled.BatteryFull,
@@ -308,7 +319,7 @@ private fun StatusHero(d: DeviceState, events: List<RemoteEvent>) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Fact(Modifier.weight(1f), if (st?.quiet == true) Icons.Filled.NotificationsOff else Icons.Filled.VolumeUp, stringResource(R.string.fact_ringer), ringer, good = st?.quiet != true)
-            Fact(Modifier.weight(1f), Icons.Filled.TouchApp, stringResource(R.string.fact_used), used, good = true)
+            Fact(Modifier.weight(1f), Icons.Filled.TouchApp, stringResource(R.string.fact_active), used, good = true)
         }
     }
 }
