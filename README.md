@@ -4,10 +4,13 @@
 
 A big-button Android launcher for elderly parents, with SOS, fall detection, medicine reminders,
 AI helpers (scam checker, "read it to me", medicine-box reader) and voice commands. The same app
-has a **family mode**: the son or daughter installs it too, links with an 8-letter code, and manages
-the parent's phone remotely.
+has a **family mode**: the son or daughter installs it too, links with an 8-letter code, and gets a
+dashboard per parent: daily "I'm OK" check-ins, safety alerts (phone on silent, battery low, offline,
+unused), ring the phone / turn the ringer back on, today's medicines, photos and notes for the parent's
+home screen, and remote control of contacts, medicines, text size and tiles. A scam call shield warns
+about, silences or blocks calls from unknown numbers.
 
-Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Messaging, AI Logic, App Check) · Play Billing 8 · English + Hindi.
+Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Storage, Messaging, Functions, AI Logic, App Check, Remote Config, In-App Messaging) · WorkManager · Play Billing 8 · English + Hindi.
 
 > **Status:** written in full but **not yet compiled** (the cloud workspace it was written in can't
 > download Android build tools). The first Android Studio sync may flag a few small things,
@@ -19,11 +22,12 @@ Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Me
 
 | Free | WarmHearth Premium (Google Play subscription `warmhearth_premium`) |
 |---|---|
-| Big-icon home screen, big dialer | Family remote setup (edit contacts & medicines from your phone) |
-| Up to 4 photo contacts | Unlimited contacts |
-| SOS: calls family + alerts linked phones with location | Medicine reminders + missed-dose alerts |
-| 3 AI scam checks a day | Fall detection |
-| Voice commands | 30 AI requests a day (scam, read-it-to-me, medicine reader) |
+| Big-icon home screen, big dialer | Safety alerts: missed check-in, on silent, low battery, offline, unused |
+| Up to 4 photo contacts | Ring their phone, turn their ringer back on |
+| SOS: calls family + alerts linked phones with location | Family remote setup (contacts, medicines, text size, tiles, call shield) |
+| Daily "I'm OK" + "Call me" requests | Medicine reminders + taken / missed tracking |
+| Photos & notes from family | Fall detection, unlimited contacts |
+| Scam call shield, voice commands, 3 AI scam checks a day | 30 AI requests a day (scam, read-it-to-me, medicine reader) |
 
 | | Monthly | Yearly |
 |---|---|---|
@@ -44,15 +48,16 @@ app/src/main/java/com/lusanetech/warmhearth/
   WarmHearthApp.kt         app start, tiny dependency container (Graph)
   ui/                      design system: Theme (colours, type, shapes, spacing), shared components
   launcher/                home screen, all-apps list
-  calls/                   big dialer, photo contacts, contact editor
+  calls/                   big dialer, photo contacts, contact editor, scam call shield
   sos/                     hold-to-SOS, location, SMS share
   fall/                    accelerometer fall detection service + "Did you fall?" screen
   meds/                    alarms, full-screen reminder, medicine screens
   ai/                      Gemini calls + quota, scam checker, read-it-to-me, camera, voice, text-to-speech
-  family/                  Firebase sync, pairing, family-mode app, push messages
+  family/                  Firebase sync, pairing, family-mode app (dashboard, manage screens), push messages
+  safety/                  phone status reports, remote commands (ring / ringer on), "find my phone" alert
   billing/                 Play Billing + paywall
   settings/                PIN, settings, home-screen buttons
-firebase/                  Firestore security rules + Cloud Function that pushes alerts to family
+firebase/                  Firestore + Storage rules, Cloud Functions (alerts, safety watch, billing, tickets, emails)
 store-listing/             Play listing in English & Hindi (keyword-researched)
 tools/play-aso/            Play Store keyword scorers used for the listing
 .claude/skills/            17 design, Android and Play Store skills for Claude Code

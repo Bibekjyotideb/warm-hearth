@@ -4,7 +4,8 @@ rules_version = '2';
 //  - The senior's phone (owner) controls its own device document and everything under it,
 //    EXCEPT premium: only Cloud Functions (verifyPurchase / playRtdn) can grant or revoke it.
 //  - A family member joins by presenting a valid, unexpired pair code.
-//  - Family members can always read; they can edit contacts/medicines only on unlocked phones.
+//  - Family members can always read and send photo notes; editing the phone (contacts, medicines,
+//    settings) and remote commands (ring, ringer on) need Premium on that phone.
 //  - Admins (custom claim admin=true, set with `npm run set-admin`) can read everything for the
 //    admin panel and reply to support tickets.
 service cloud.firestore {
@@ -43,7 +44,14 @@ service cloud.firestore {
           && request.resource.data.family.toSet().difference(resource.data.family.toSet()) == [request.auth.uid].toSet()
           && resource.data.family.toSet().difference(request.resource.data.family.toSet()).size() == 0
           && pairCode(request.resource.data.lastPairCode).deviceId == deviceId
-          && pairCode(request.resource.data.lastPairCode).expiresAt > request.time);
+          && pairCode(request.resource.data.lastPairCode).expiresAt > request.time)
+        // 3. A family member changing the phone's settings (text size, tiles, safety alerts,
+        //    call shield) from their own phone. Premium only.
+        || (signedIn()
+          && request.auth.uid in resource.data.family
+          && resource.data.premium == true
+          && changes().hasOnly(['settings'])
+          && request.resource.data.settings is map);
 
       match /contacts/{id} {
         allow read: if isOwner(deviceId) || isFamily(deviceId) || isAdmin();
@@ -57,6 +65,38 @@ service cloud.firestore {
         allow read: if isOwner(deviceId) || isFamily(deviceId) || isAdmin();
         allow create: if isOwner(deviceId);
       }
+      // One doc per dose ("taken" or "missed"), so the family sees today's medicines.
+      match /doses/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow write: if isOwner(deviceId);
+      }
+      // Photos and short notes from family, shown on the senior's home screen. Free on every plan.
+      match /notes/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow create: if isFamily(deviceId)
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'text', 'photoUrl', 'storagePath', 'createdAt', 'expireAt'])
+          && request.resource.data.text is string && request.resource.data.text.size() <= 500
+          && (!('storagePath' in request.resource.data) || request.resource.data.storagePath.matches('notes/' + deviceId + '/.*'));
+        // The senior's phone marks a note as seen; the sender can delete their own note.
+        allow update: if isOwner(deviceId) && changes().hasOnly(['seenAt']);
+        allow delete: if isOwner(deviceId) || (isFamily(deviceId) && resource.data.fromUid == request.auth.uid);
+      }
+      // "Ring her phone", "Turn the ringer on": delivered by the sendCommand function. Premium only.
+      match /commands/{id} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow create: if isFamily(deviceId)
+          && dev(deviceId).premium == true
+          && request.resource.data.byUid == request.auth.uid
+          && request.resource.data.type in ['ring', 'ringer_on', 'sync']
+          && request.resource.data.keys().hasOnly(['type', 'byUid', 'byName', 'createdAt']);
+        allow update: if isOwner(deviceId) && changes().hasOnly(['doneAt', 'result']);
+      }
+    }
+
+    // The senior phone's push token, for remote commands. Written by that phone, read only by the server.
+    match /deviceTokens/{deviceId} {
+      allow create, update: if isOwner(deviceId) && request.resource.data.keys().hasOnly(['token', 'updatedAt']);
     }
 
     // Codes can be fetched by exact id only (no listing), so they can't be enumerated.
@@ -90,6 +130,6 @@ service cloud.firestore {
 
     match /subscriptions/{token} { allow read: if isAdmin(); }
     match /stats/{day} { allow read: if isAdmin(); }
-    // rateLimits: server only (no client rule = denied)
+    // rateLimits, alertState: server only (no client rule = denied)
   }
 }

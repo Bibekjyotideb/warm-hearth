@@ -39,6 +39,7 @@ class MedicineAlarmReceiver : BroadcastReceiver() {
                         if (graph.db.doseLogs().countTaken(medId, slot) == 0) {
                             val name = graph.prefs.current().seniorName.ifBlank { context.getString(R.string.your_family_member) }
                             graph.family.sendEvent("missed_dose", context.getString(R.string.family_missed_dose, name, med.name, time))
+                            graph.family.recordDose(medId, med.name, slot, taken = false)
                         }
                     }
                 }

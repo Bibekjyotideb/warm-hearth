@@ -24,7 +24,7 @@ Senior launcher with big icons, SOS, medicine alarms & AI scam check for parents
 WarmHearth is the elderly launcher that turns any Android phone into an easy phone for Mum and Dad: big icons, big text, one tap to call family, and an SOS button that really works. Families set it up once, then manage it from their own phone.
 
 ★ MADE FOR SENIORS
-• Big launcher with huge, colourful buttons and extra-large text (3 sizes)
+• Big launcher with large, clear buttons and extra-large text (3 sizes). Looks like a modern phone, not a toy
 • Photo contacts: tap a face to call. "Call Asha?" — Yes / No, so no accidental calls
 • Big dialer with large numbers
 • Clock, date and battery always visible
@@ -32,6 +32,9 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • Works in English and Hindi
 
 ★ SOS & SAFETY
+• Daily "I'm OK": one tap each morning tells the family all is well
+• "Ask my family to call me" button
+• Scam call shield: warn about, silence or block calls from unknown numbers
 • Hold the red SOS button for 3 seconds: family gets an alert with the location, and the emergency contact is called
 • Fall detection: if the phone senses a fall and there's no answer in 30 seconds, SOS starts by itself
 • Send location by SMS and call 112 / 911 in one tap
@@ -46,14 +49,21 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • Full-screen alarm with a photo of the pill and a big "I took it" button
 • Family is alerted if a dose is missed
 
-★ FAMILY REMOTE SETUP
+★ FAMILY APP: PEACE OF MIND FOR YOU
 • Install WarmHearth on your own phone too, choose "I'm a family member" and link with an 8-letter code
-• Add contacts and medicines for your parents from anywhere
-• Get SOS, fall and missed-medicine alerts instantly
+• A dashboard for each parent: did they check in, battery, ringer, when the phone was last used
+• Safety alerts: no "I'm OK" by your chosen time, phone on silent, battery low, phone offline or unused for hours (sleep hours respected)
+• Ring their phone loudly, even on silent, or turn their ringer back on from yours
+• See today's medicines: taken or missed, in their time zone
+• Send photos and notes that appear big on their home screen
+• Change contacts, medicine times, text size and home-screen buttons from anywhere
+• Brothers and sisters can link too
 
 ★ FREE, WITH PREMIUM WHEN YOU NEED IT
-Free: the senior launcher, big dialer, photo contacts (up to 4), SOS with family alerts, 3 scam checks a day.
-WarmHearth Premium (monthly or yearly, 7-day free trial): family remote setup, medicine reminders with missed-dose alerts, fall detection, unlimited contacts, AI reading and scam checks. Cancel any time in Google Play.
+Free: the senior launcher, big dialer, photo contacts (up to 4), SOS with family alerts, daily "I'm OK", call requests, photos from family, scam call shield, 3 scam checks a day.
+WarmHearth Premium (monthly or yearly, 7-day free trial, covers every parent you link): safety alerts, ring their phone and turn the ringer on, family remote setup, medicine reminders with taken/missed tracking, fall detection, unlimited contacts, AI reading and scam checks. Cancel any time in Google Play.
+
+Privacy: the family sees how the phone is (battery, ringer, last used), never what's on it. No ads, no data selling.
 
 Whether you call it a senior launcher, old age launcher, big icons launcher or a senior citizen app — WarmHearth is the simple launcher for elderly parents that keeps the whole family close.
 

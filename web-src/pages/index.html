@@ -1,14 +1,14 @@
 <section class="hero" aria-labelledby="hero-title">
   <div class="wrap">
     <div class="hero-copy">
-      <h1 id="hero-title">Your parents' phone, simple again.</h1>
-      <p class="lede">WarmHearth turns any Android phone into big buttons, faces to tap, medicine alarms, and an SOS that reaches you wherever you are.</p>
+      <h1 id="hero-title">A simpler phone for them. Peace of mind for you.</h1>
+      <p class="lede">WarmHearth turns your parent's Android phone into big buttons, faces to tap and an SOS that can't be pressed by accident. Your phone becomes the place you check they're OK, and fix things when they're not.</p>
       <div class="hero-actions">
         <a class="play-badge" href="{{play}}">
           <svg width="26" height="28" viewBox="0 0 26 28" aria-hidden="true"><path d="M1 1.5 15 14 1 26.5c-.6-.3-1-1-1-1.8V3.3C0 2.5.4 1.8 1 1.5Z" fill="#34A853"/><path d="m19.6 9.8-4.6 4.2 4.6 4.2 4.9-2.8c1.4-.8 1.4-2 0-2.8Z" fill="#FBBC04"/><path d="M1 1.5c.4-.2 1-.2 1.6.1L19.6 9.8 15 14Z" fill="#4285F4"/><path d="M15 14l4.6 4.2-17 8.2c-.6.3-1.2.3-1.6.1Z" fill="#EA4335"/></svg>
           <span><small>Get it on</small><strong>Google Play</strong></span>
         </a>
-        <a class="btn btn-ghost" href="#see-it">See the screens</a>
+        <a class="btn btn-ghost" href="#for-you">See the family app</a>
       </div>
       <ul class="promises" aria-label="What you can count on">
         <li>{{icon:check_circle}}Free to start</li>
@@ -18,28 +18,58 @@
       </ul>
     </div>
 
-    <div class="hero-visual" id="demo">
-      {{phone:home|WarmHearth home screen. Try it: tap a face or hold SOS.}}
-      <div class="notif hero-notif" aria-hidden="true">
-        <div class="n-ico">{{icon:sos}}</div>
-        <b>Maa pressed SOS</b><span>Tap to see her location · now</span>
+    <div>
+      <div class="duo" id="demo">
+        <div class="duo-col" id="demo-senior">
+          {{phone:home|Your parent's WarmHearth home screen. Try it: tap I'm OK, ask for a call, or hold SOS.}}
+          <span class="duo-label">Their phone</span>
+        </div>
+        <span class="duo-link" aria-hidden="true">{{icon:link}}Linked</span>
+        <div class="duo-col" id="demo-family">
+          {{phone:family|Your phone: the family dashboard reacts to what happens on theirs.}}
+          <span class="duo-label"><i class="dot"></i>Your phone</span>
+        </div>
       </div>
-      <p class="hero-hint">Try it: tap a face, or press and hold SOS.</p>
+      <p class="hero-hint">Try it on their phone: tap "I'm OK", ask for a call, or press and hold SOS. Watch yours.</p>
     </div>
   </div>
 </section>
 
-<section id="see-it" class="section-alt" aria-labelledby="see-title">
+<section id="for-them" class="section-alt" aria-labelledby="them-title">
   <div class="wrap">
     <div class="intro">
-      <h2 id="see-title">Made for hands that shake and eyes that tire.</h2>
-      <p>Every button is at least the size of a thumb. Every word is large enough to read without glasses. Nothing important is more than one tap away.</p>
+      <h2 id="them-title">On their phone: big, calm, and still a real smartphone.</h2>
+      <p>Every button is at least the size of a thumb and every word is readable without glasses. It looks like a modern phone, not a toy, so nobody feels embarrassed using it. WhatsApp, the camera and their photos stay where they are.</p>
     </div>
-    <div class="showcase">
-      <figure class="shot">{{phone:call|Asking before calling}}<figcaption><b>No accidental calls</b><span>Tap a face and WarmHearth asks first. A big green yes, a big grey no.</span></figcaption></figure>
+    <div class="showcase three">
+      <figure class="shot">{{phone:note|A photo from family on the home screen}}<figcaption><b>Your photos, on their home screen</b><span>Send a photo or a short note from your phone. It appears big, with a button to call you back.</span></figcaption></figure>
+      <figure class="shot">{{phone:shield|Warning on a call from an unknown number}}<figcaption><b>A shield against scam calls</b><span>Calls from unsaved numbers come with a clear warning, or don't ring at all. You choose.</span></figcaption></figure>
       <figure class="shot">{{phone:sos|Hold to SOS}}<figcaption><b>SOS that can't be pocket-dialled</b><span>Hold for 3 seconds. You get their location, and their emergency contact is called.</span></figcaption></figure>
+      <figure class="shot">{{phone:call|Asking before calling}}<figcaption><b>No accidental calls</b><span>Tap a face and WarmHearth asks first. A big green yes, a big grey no.</span></figcaption></figure>
       <figure class="shot">{{phone:meds|Medicine alarm}}<figcaption><b>The right pill, on time</b><span>A full-screen alarm with a photo of the actual medicine. One tap: "I took it".</span></figcaption></figure>
-      <figure class="shot">{{phone:scam|Scam check}}<figcaption><b>"Is this a scam?"</b><span>Share any SMS or WhatsApp. A clear answer in simple words, read aloud.</span></figcaption></figure>
+      <figure class="shot">{{phone:scam|Scam message check}}<figcaption><b>"Is this message a scam?"</b><span>Share any SMS or WhatsApp. A clear answer in simple words, read aloud in English or Hindi.</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="for-you" aria-labelledby="you-title">
+  <div class="wrap">
+    <div class="intro">
+      <h2 id="you-title">On your phone: know they're OK, and fix it when they're not.</h2>
+      <p>The same app, in family mode. Sign in with Google, type the code from their phone, and you have a dashboard for each parent. Brothers and sisters can link too.</p>
+    </div>
+    <div class="yours">
+      <div class="yours-phones">
+        <figure class="shot">{{phone:famalert|Alerts on the family phone}}<figcaption><b>Told when something's off</b><span>No "I'm OK" by the usual time, phone on silent, battery about to die, or not used for hours. Fix it from the notification.</span></figcaption></figure>
+        <figure class="shot">{{phone:famsafety|Safety alert settings}}<figcaption><b>Set to how they live</b><span>Choose the check-in time, their sleep hours and what counts as worrying.</span></figcaption></figure>
+        <figure class="shot">{{phone:famphoto|Sending a photo}}<figcaption><b>Small things that matter</b><span>A photo of the grandchildren, a note before a visit. You see when they've seen it.</span></figcaption></figure>
+      </div>
+      <ul class="checks yours-list">
+        <li>{{icon:notifications_active}}<span><b>Ring their phone loudly</b>, even on silent, when they don't pick up. They tap "I'm here" and you're told.</span></li>
+        <li>{{icon:volume_up}}<span><b>Turn their ringer back on</b> from your phone. The most common reason "Maa isn't answering".</span></li>
+        <li>{{icon:medication}}<span><b>Today's medicines</b>: each dose shows as taken or missed, in their time zone, even if you live abroad.</span></li>
+        <li>{{icon:edit}}<span><b>Change anything on their phone</b> from yours: people to call, medicine times, text size, which buttons show.</span></li>
+      </ul>
     </div>
   </div>
 </section>
@@ -49,31 +79,15 @@
     <div class="intro"><h2 id="how-title">Set up in ten minutes, together.</h2><p>Do it once on a visit or a video call. After that you can help from wherever you live.</p></div>
     <ol class="steps">
       <li><h3>Install on their phone</h3><p>Choose "Set up this phone for a senior", pick a PIN, and make WarmHearth the home screen. Their apps and photos stay where they are.</p></li>
-      <li><h3>Link your phone</h3><p>Install WarmHearth on yours, sign in with Google, and type the 8-letter code shown on their phone.</p></li>
-      <li><h3>Help from anywhere</h3><p>Add their people and medicines from your phone. SOS and missed-medicine alerts come straight to you.</p></li>
+      <li><h3>Link your phone</h3><p>Install WarmHearth on yours, choose family mode, sign in with Google and type the 8-letter code shown on their phone.</p></li>
+      <li><h3>Look after them from anywhere</h3><p>Add their people and medicines, set a check-in time, and send your first photo. Alerts come straight to you.</p></li>
     </ol>
-  </div>
-</section>
-
-<section aria-labelledby="family-title">
-  <div class="wrap split">
-    <div class="phone-wrap">{{phone:family|Family phone: alerts}}</div>
-    <div>
-      <h2 id="family-title">You'll know when they need you.</h2>
-      <p class="muted">Your phone becomes the remote control for theirs.</p>
-      <ul class="checks">
-        <li>{{icon:check_circle}}<span><b>SOS and fall alerts</b> with their location on the map, even if you live in another city.</span></li>
-        <li>{{icon:check_circle}}<span><b>Missed-medicine alerts</b> 30 minutes after a dose isn't marked as taken.</span></li>
-        <li>{{icon:check_circle}}<span><b>Change their contacts and medicine times</b> from your phone. Their screen updates in seconds.</span></li>
-        <li>{{icon:check_circle}}<span><b>Fall detection</b> starts SOS if they don't answer within 30 seconds.</span></li>
-      </ul>
-    </div>
   </div>
 </section>
 
 <section id="pricing" class="section-alt" aria-labelledby="pricing-title">
   <div class="wrap">
-    <div class="intro"><h2 id="pricing-title">Free to use. Premium when you want more.</h2><p>Try Premium free for 7 days. Cancel any time in Google Play, and we'll remind you before the trial ends.</p></div>
+    <div class="intro"><h2 id="pricing-title">Free to use. Premium when you want more.</h2><p>One subscription covers every parent phone you link. Try Premium free for 7 days. Cancel any time in Google Play, and we'll remind you before the trial ends.</p></div>
     <div class="price-switch" id="price-switch">
       <div class="seg" role="group" aria-label="Billing period">
         <button type="button" data-period="yearly" aria-pressed="true">Yearly</button>
@@ -91,10 +105,11 @@
         <p class="muted">Forever</p>
         <ul>
           <li>{{icon:check}}Big home screen and dialer</li>
-          <li>{{icon:check}}Up to 4 photo contacts</li>
           <li>{{icon:check}}SOS with family alerts and location</li>
-          <li>{{icon:check}}Voice commands</li>
-          <li>{{icon:check}}3 scam checks a day</li>
+          <li>{{icon:check}}Daily "I'm OK" and "Call me" requests</li>
+          <li>{{icon:check}}Photos and notes from family</li>
+          <li>{{icon:check}}Scam call shield</li>
+          <li>{{icon:check}}Up to 4 photo contacts, 3 scam checks a day</li>
         </ul>
       </div>
       <div class="plan">
@@ -102,11 +117,12 @@
         <p class="amount"><span data-price>$39.99</span><small data-per> / year</small></p>
         <p class="muted" data-note>7 days free, then billed yearly through Google Play. Save 33% vs monthly.</p>
         <ul>
+          <li>{{icon:check}}Safety alerts: no check-in, on silent, low battery, offline, not used</li>
+          <li>{{icon:check}}Ring their phone and turn the ringer back on</li>
           <li>{{icon:check}}Manage their phone from yours</li>
-          <li>{{icon:check}}Medicine reminders with missed-dose alerts</li>
+          <li>{{icon:check}}Medicine reminders with taken / missed tracking</li>
           <li>{{icon:check}}Fall detection</li>
-          <li>{{icon:check}}Unlimited contacts</li>
-          <li>{{icon:check}}Scam checks, "Read it to me" and medicine scanning</li>
+          <li>{{icon:check}}Unlimited contacts, scam checks and "Read it to me"</li>
         </ul>
       </div>
     </div>
@@ -115,10 +131,10 @@
 
 <section aria-labelledby="trust-title">
   <div class="wrap">
-    <div class="intro"><h2 id="trust-title">Their privacy, protected.</h2></div>
+    <div class="intro"><h2 id="trust-title">Looking after them, not watching them.</h2></div>
     <div class="trust">
-      <div><div class="t-ico">{{icon:lock}}</div><h3>Location only in an emergency</h3><p>Shared with the family members they linked, only when SOS is pressed or a fall is detected.</p></div>
-      <div><div class="t-ico">{{icon:photo_library}}</div><h3>Photos stay on the phone</h3><p>Pictures of people and pills are never uploaded. Contacts are shared only with linked family.</p></div>
+      <div><div class="t-ico">{{icon:lock}}</div><h3>No tracking</h3><p>Their phone shares battery, ringer and when it was last used. Never messages, calls, browsing or apps used. Location only when SOS is pressed or a fall is detected.</p></div>
+      <div><div class="t-ico">{{icon:photo_library}}</div><h3>Their photos stay put</h3><p>Pictures of people and pills never leave their phone. Photos you send them are deleted after 30 days.</p></div>
       <div><div class="t-ico">{{icon:block}}</div><h3>No ads. No data selling.</h3><p>We make money one way: Premium subscriptions. Read the <a href="/privacy">privacy policy</a>.</p></div>
     </div>
   </div>
@@ -127,10 +143,12 @@
 <section id="faq" class="faq section-alt" aria-labelledby="faq-title">
   <div class="wrap">
     <h2 id="faq-title">Questions</h2>
-    <details><summary>Will it work on my parents' phone?</summary><p>Any Android phone running Android 8 or newer. Their apps, WhatsApp and photos stay exactly where they are; WarmHearth only changes the home screen.</p></details>
+    <details><summary>Will it work on my parents' phone?</summary><p>Any Android phone running Android 8 or newer. The scam call shield needs Android 10 or newer. Their apps, WhatsApp and photos stay exactly where they are; WarmHearth only changes the home screen.</p></details>
+    <details><summary>Do I need an iPhone or Android for the family app?</summary><p>The family app is on Android today. An iPhone version is planned.</p></details>
+    <details><summary>How does the daily check-in work?</summary><p>Each morning a card on their home screen says "Let your family know you're OK". One tap and you get a gentle notification. If they haven't tapped it by the time you chose, you get an alert and can ring their phone from it.</p></details>
     <details><summary>Can they go back to the old home screen?</summary><p>Yes. Settings → "Switch to the old home screen" (behind the PIN) brings back the phone's normal launcher. Nothing is deleted.</p></details>
     <details><summary>Is WarmHearth an emergency service?</summary><p>No. SOS alerts family and calls their emergency contact, but it depends on the phone having battery and network. It does not replace 112 / 911, and fall detection is a helper, not a medical device.</p></details>
-    <details><summary>Who can see their location?</summary><p>Only family members they linked, and only when SOS is pressed or a fall is detected. See the <a href="/privacy">privacy policy</a>.</p></details>
+    <details><summary>Who can see what?</summary><p>Only family members they linked. They see the phone's status (battery, ringer, last used), check-ins, medicine doses and alerts. Location only when SOS is pressed or a fall is detected. See the <a href="/privacy">privacy policy</a>.</p></details>
     <details><summary>Do the AI features read their messages?</summary><p>Only the single message or photo they choose to check, at the moment they tap Check or Read. It's sent to Google's Gemini service for the answer and isn't stored by us.</p></details>
     <details><summary>How does the free trial work?</summary><p>Premium is free for the first 7 days. We email you 2 days before it ends. Cancel in Google Play before then and you pay nothing; otherwise your plan starts automatically.</p></details>
     <details><summary>How do I cancel, or get a refund?</summary><p>Cancel any time in Google Play → Payments &amp; subscriptions; Premium stays on until the end of the period you paid for. For a refund, email <a href="mailto:{{billing}}">{{billing}}</a> within 14 days of a charge. Details in the <a href="/refunds">refund policy</a>.</p></details>

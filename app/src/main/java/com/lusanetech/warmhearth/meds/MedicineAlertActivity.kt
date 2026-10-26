@@ -80,6 +80,7 @@ class MedicineAlertActivity : ComponentActivity() {
                         sound.stop()
                         scope.launch {
                             graph.db.doseLogs().insert(DoseLog(medicineId = medId, slot = slot, takenAt = System.currentTimeMillis()))
+                            graph.family.recordDose(medId, med?.name ?: "", slot, taken = true)
                             finish()
                         }
                     }

@@ -23,7 +23,9 @@ SITE = {
     "billing": "billing@lusanetech.com",
     "privacy_contact": "support@lusanetech.com",
     "play": "https://play.google.com/store/apps/details?id=com.lusanetech.warmhearth",
-    "updated": "25 October 2026",
+    "updated": "26 October 2026",
+    # Illustration used as the "photo from family" on screens (no real people's photos on the site).
+    "sunrise": '<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C27A"/><stop offset=".55" stop-color="#F3A066"/><stop offset="1" stop-color="#E9895E"/></linearGradient></defs><rect width="400" height="300" fill="url(#sky)"/><circle cx="250" cy="175" r="46" fill="#FFF1C9"/><path d="M0 200 Q90 150 180 190 T400 170 V300 H0Z" fill="#B76E57"/><path d="M0 235 Q120 195 230 228 T400 215 V300 H0Z" fill="#7F4E45"/><path d="M0 262 H400 V300 H0Z" fill="#3E3431"/><g stroke="#3E3431" stroke-width="7"><path d="M20 262 V214M80 262 V214M140 262 V214M200 262 V214M260 262 V214M320 262 V214M380 262 V214"/><path d="M0 214 H400" stroke-width="9"/></g><path d="M300 120 q8 -6 16 0 q8 -6 16 0" fill="none" stroke="#7F4E45" stroke-width="3" stroke-linecap="round"/></svg>',
 }
 
 LOGO = """<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#0F4C4A"/>
@@ -102,8 +104,8 @@ FOOT = """</main>
 
 PAGES = [
     # file, path, title, description, scripts
-    ("index.html", "/", "Elderly Launcher for Seniors – WarmHearth | Big icons, SOS, medicine alarms",
-     "WarmHearth is a simple elderly launcher for Android: big icons, photo contacts, SOS with family alerts, medicine reminders and AI scam checks. Free, with a 7-day free trial of Premium.",
+    ("index.html", "/", "Elderly Launcher for Seniors – WarmHearth | Big icons, SOS, family safety alerts",
+     "WarmHearth turns your parent's Android phone into a simple elderly launcher (big buttons, SOS, medicine alarms, scam call shield) and gives you a family app with daily check-ins and safety alerts. Free, with a 7-day trial of Premium.",
      '<script src="/js/demo.js" defer></script>'),
     ("privacy.html", "/privacy", "Privacy policy – WarmHearth", "How WarmHearth collects, uses and protects personal data.", ""),
     ("terms.html", "/terms", "Terms of service – WarmHearth", "The terms for using WarmHearth.", ""),
@@ -163,7 +165,8 @@ def main():
         print("built", file)
 
     # docs/app-preview.html: every app screen side by side, for reviewing the design without a phone.
-    shots = [("home", "Home screen"), ("call", "Tap a face"), ("sos", "SOS"), ("meds", "Medicine alarm"), ("scam", "Scam check"), ("family", "Family phone")]
+    shots = [("home", "Home screen"), ("note", "Photo from family"), ("call", "Tap a face"), ("sos", "SOS"), ("meds", "Medicine alarm"), ("scam", "Scam check"),
+             ("shield", "Scam call shield"), ("family", "Family dashboard"), ("famalert", "Family alerts"), ("famsafety", "Safety settings"), ("famphoto", "Send a photo")]
     grid = "".join(f'<figure class="preview">{phone(n, t)}<figcaption>{t}</figcaption></figure>' for n, t in shots)
     preview = HEAD.format(title="WarmHearth app preview", description="App screens", url=SITE["url"], path="/preview", extra_head="", logo=LOGO)
     (ROOT.parent / "docs").mkdir(exist_ok=True)

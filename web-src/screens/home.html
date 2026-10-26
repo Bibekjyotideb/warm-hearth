@@ -1,27 +1,33 @@
 <div class="app app-home">
-  <div class="app-top">
-    <div>
-      <div class="app-clock" data-clock>9:41</div>
-      <div class="app-date" data-date>Sunday, 25 October</div>
-      <div class="app-hello">Hello, Kamala</div>
+  <div class="app-scroll">
+    <div class="app-top">
+      <div>
+        <div class="app-clock" data-clock>9:41</div>
+        <div class="app-date" data-date>Monday, 26 October</div>
+      </div>
+      <div class="app-status">
+        <span class="app-bat">{{icon:battery_full}}86%</span>
+        <span class="app-gear">{{icon:settings}}</span>
+      </div>
     </div>
-    <div class="app-status">
-      <span class="app-gear">{{icon:settings}}</span>
-      <span class="app-bat">{{icon:battery_full}}86%</span>
+    <div class="app-card app-checkin t-brand" data-checkin>
+      <div class="app-card-title">Good morning, Kamala</div>
+      <div class="app-card-sub" data-checkin-sub>Tap once to tell your family you're OK today.</div>
+      <button class="app-btn t-grn" data-ok>{{icon:check}}<span>I'm OK</span></button>
+      <div class="app-ok-done" data-ok-done hidden>{{icon:check_circle}}<span>Your family knows you're OK</span></div>
     </div>
-  </div>
-  <div class="app-faces">
-    <button class="app-face" data-name="Asha"><span class="av" style="--c:#5E35B1">A</span><span>Asha</span></button>
-    <button class="app-face" data-name="Ravi"><span class="av" style="--c:#00695C">R</span><span>Ravi</span></button>
-    <button class="app-face" data-name="Dr. Sen"><span class="av" style="--c:#1B5E8C">DS</span><span>Dr. Sen</span></button>
-  </div>
-  <div class="app-tiles">
-    <div class="app-tile" style="--c:#1E7B34">{{icon:call}}<span>Phone</span></div>
-    <div class="app-tile" style="--c:#1B5E8C">{{icon:contacts}}<span>People</span></div>
-    <div class="app-tile" style="--c:#0E7A3C">{{icon:chat}}<span>WhatsApp</span></div>
-    <div class="app-tile" style="--c:#B85C00">{{icon:medication}}<span>Medicines</span></div>
-    <div class="app-tile" style="--c:#1B5E8C">{{icon:shield}}<span>Is it a scam?</span></div>
-    <div class="app-tile" style="--c:#5E35B1">{{icon:document_scanner}}<span>Read it to me</span></div>
+    <div class="app-faces">
+      <button class="app-face" data-name="Ravi"><span class="av t-tea">R</span><span>Ravi</span></button>
+      <button class="app-face" data-name="Asha"><span class="av t-pur">A</span><span>Asha</span></button>
+      <button class="app-face" data-name="Dr. Sen"><span class="av t-blu">DS</span><span>Dr. Sen</span></button>
+    </div>
+    <button class="app-soft t-blu" data-callme>{{icon:phone_callback}}<span>Ask my family to call me</span></button>
+    <div class="app-tiles">
+      <div class="app-tile t-grn"><i class="chip">{{icon:call}}</i><span>Phone</span></div>
+      <div class="app-tile t-wa"><i class="chip">{{icon:chat}}</i><span>WhatsApp</span></div>
+      <div class="app-tile t-org"><i class="chip">{{icon:medication}}</i><span>Medicines</span></div>
+      <div class="app-tile t-brand"><i class="chip">{{icon:shield}}</i><span>Is it a scam?</span></div>
+    </div>
   </div>
   <div class="app-bottom">
     <button class="app-speak" data-speak>{{icon:mic}}<span>Speak</span></button>
@@ -29,10 +35,10 @@
   </div>
   <div class="app-dialog" data-dialog hidden>
     <div class="app-dialog-card">
-      <span class="av av-xl" data-dialog-av style="--c:#5E35B1">A</span>
-      <div class="app-dialog-title" data-dialog-text>Call Asha?</div>
-      <button class="app-btn" style="--c:#1E7B34" data-yes>{{icon:call}}<span>Yes, call</span></button>
-      <button class="app-btn" style="--c:#4E5B62" data-no>{{icon:close}}<span>No</span></button>
+      <span class="av av-xl t-tea" data-dialog-av>R</span>
+      <div class="app-dialog-title" data-dialog-text>Call Ravi?</div>
+      <button class="app-btn t-grn" data-yes>{{icon:call}}<span>Yes, call</span></button>
+      <button class="app-btn t-gry" data-no>{{icon:close}}<span>No</span></button>
     </div>
   </div>
 </div>

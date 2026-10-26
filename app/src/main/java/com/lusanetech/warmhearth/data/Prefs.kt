@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +42,23 @@ data class Settings(
     val premium: Boolean,
     val fallDetection: Boolean,
     val paired: Boolean,
+    /** Call shield for numbers that aren't in WarmHearth's people: off | warn | silence | block. */
+    val callShield: String,
+    /** Daily "I'm OK" card on the home screen (set by the family). */
+    val checkInEnabled: Boolean,
+    /** "yyyy-MM-dd" of the last check-in, so the card only shows until they've tapped it today. */
+    val lastCheckInDay: String,
+    /** updatedAt of the last settings document applied from the family, to avoid loops. */
+    val settingsAppliedAt: Long,
 )
+
+object CallShieldMode {
+    const val OFF = "off"
+    const val WARN = "warn"
+    const val SILENCE = "silence"
+    const val BLOCK = "block"
+    val ALL = listOf(OFF, WARN, SILENCE, BLOCK)
+}
 
 class Prefs(private val context: Context) {
     private object K {
@@ -54,6 +71,10 @@ class Prefs(private val context: Context) {
         val PREMIUM = booleanPreferencesKey("premium")
         val FALL = booleanPreferencesKey("fall_detection")
         val PAIRED = booleanPreferencesKey("paired")
+        val SHIELD = stringPreferencesKey("call_shield")
+        val CHECKIN = booleanPreferencesKey("checkin_enabled")
+        val CHECKIN_DAY = stringPreferencesKey("checkin_day")
+        val APPLIED = longPreferencesKey("settings_applied_at")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { it.toSettings() }
@@ -64,12 +85,17 @@ class Prefs(private val context: Context) {
         mode = this[K.MODE]?.let { runCatching { AppMode.valueOf(it) }.getOrNull() } ?: AppMode.UNSET,
         pin = this[K.PIN] ?: "0000",
         fontScale = this[K.FONT] ?: 1.25f,
-        tiles = this[K.TILES]?.split(",")?.filter { it.isNotBlank() } ?: Tiles.DEFAULT,
+        tiles = this[K.TILES]?.split(",")?.filter { it.isNotBlank() }
+            ?: com.lusanetech.warmhearth.util.RemoteFlags.defaultTiles() ?: Tiles.DEFAULT, // OTA default for new installs
         seniorName = this[K.NAME] ?: "",
         deviceId = this[K.DEVICE_ID] ?: "",
         premium = this[K.PREMIUM] ?: false,
         fallDetection = this[K.FALL] ?: false,
         paired = this[K.PAIRED] ?: false,
+        callShield = this[K.SHIELD] ?: CallShieldMode.WARN,
+        checkInEnabled = this[K.CHECKIN] ?: true,
+        lastCheckInDay = this[K.CHECKIN_DAY] ?: "",
+        settingsAppliedAt = this[K.APPLIED] ?: 0L,
     )
 
     /** Stable random id for this phone, created once. Used as the Firestore device document id. */
@@ -88,6 +114,19 @@ class Prefs(private val context: Context) {
     suspend fun setPremium(value: Boolean) = context.dataStore.edit { it[K.PREMIUM] = value }
     suspend fun setFallDetection(value: Boolean) = context.dataStore.edit { it[K.FALL] = value }
     suspend fun setPaired(value: Boolean) = context.dataStore.edit { it[K.PAIRED] = value }
+    suspend fun setCallShield(mode: String) = context.dataStore.edit { it[K.SHIELD] = mode }
+    suspend fun setCheckInEnabled(value: Boolean) = context.dataStore.edit { it[K.CHECKIN] = value }
+    suspend fun setLastCheckInDay(day: String) = context.dataStore.edit { it[K.CHECKIN_DAY] = day }
+
+    /** Applies settings the family changed remotely, in one write. */
+    suspend fun applyRemote(textScale: Float?, tiles: List<String>?, callShield: String?, checkIn: Boolean?, updatedAt: Long) =
+        context.dataStore.edit { p ->
+            textScale?.let { p[K.FONT] = it }
+            tiles?.let { p[K.TILES] = it.joinToString(",") }
+            callShield?.takeIf { it in CallShieldMode.ALL }?.let { p[K.SHIELD] = it }
+            checkIn?.let { p[K.CHECKIN] = it }
+            p[K.APPLIED] = updatedAt
+        }
 
     /** Used by "Delete this phone's data": back to a fresh install (a new device id is created). */
     suspend fun clearAll() = context.dataStore.edit { it.clear() }

@@ -5,7 +5,7 @@
 
 <p>WarmHearth ("the app") is made by {{company}}, a sole proprietorship owned by {{owner}}, {{address}} ("we", "us"). This policy explains what personal data the app and this website handle, why, and the choices you have. It applies to everyone who uses WarmHearth: the senior whose phone runs it, and family members who link their phones.</p>
 
-<div class="callout"><strong>In short:</strong> we collect only what the features need. Photos of people and pills stay on the senior's phone. Location is shared only with linked family, only during SOS or a detected fall. We never sell data and the app has no ads.</div>
+<div class="callout"><strong>In short:</strong> we collect only what the features need. Photos of people and pills stay on the senior's phone. Linked family see how the phone is (battery, ringer, last used), never what's on it. Location is shared only with linked family, only during SOS or a detected fall. We never sell data and the app has no ads.</div>
 
 <h2>1. What we collect and why</h2>
 <table>
@@ -14,10 +14,15 @@
 <tr><td>A random device ID, app version, phone model, language</td><td>Senior's phone</td><td>To run the app, link family, fix bugs, count active phones</td><td>Our cloud database</td></tr>
 <tr><td>Names and phone numbers of contacts you add</td><td>People the senior calls</td><td>Photo contacts, SOS calls, family editing</td><td>On the phone; synced to our database so linked family can edit</td></tr>
 <tr><td>Contact and medicine photos</td><td>Senior</td><td>Show faces and pill photos</td><td><strong>Only on the phone.</strong> Never uploaded.</td></tr>
-<tr><td>Medicine names, doses and times; which doses were taken</td><td>Senior</td><td>Reminders and missed-dose alerts</td><td>Medicine list synced; dose history stays on the phone (a "missed" alert is sent to family)</td></tr>
+<tr><td>Medicine names, doses and times; whether each dose was taken or missed</td><td>Senior</td><td>Reminders, missed-dose alerts, and "today's medicines" on the family's phone</td><td>Synced to our database for linked family; dose records deleted after 90 days</td></tr>
+<tr><td>Phone status: battery level, charging, ringer mode and volume, Do Not Disturb, network type (Wi-Fi / mobile), time zone, when the phone was last used, number of unknown calls screened today</td><td>Senior</td><td>Safety alerts for family (phone on silent, battery low, offline, not used) and the family dashboard</td><td>Our cloud database, overwritten every ~30 minutes. <strong>No messages, call history, browsing or app usage.</strong></td></tr>
+<tr><td>Names of apps with a home-screen icon</td><td>Senior's phone</td><td>So family can choose which apps appear on the home screen</td><td>Our cloud database, refreshed daily</td></tr>
+<tr><td>Daily "I'm OK" check-ins and "call me" requests</td><td>Senior</td><td>Tell linked family they're fine or want a call</td><td>Sent to linked family; kept 90 days</td></tr>
+<tr><td>Photos and notes sent by family</td><td>Family member (and anyone in the photo)</td><td>Show them on the senior's home screen</td><td>Firebase Storage and our database; <strong>deleted after 30 days</strong>, or earlier by the sender</td></tr>
+<tr><td>Numbers of incoming calls not saved in contacts (call shield)</td><td>Callers</td><td>Warn about, silence or block possible scam calls</td><td><strong>Checked on the phone only.</strong> Numbers are never uploaded; family sees a daily count.</td></tr>
 <tr><td>Location</td><td>Senior</td><td>Only when SOS is pressed or a fall is detected, to tell family where they are</td><td>Sent to linked family; stored with that alert</td></tr>
 <tr><td>Google account name and email</td><td>Family member</td><td>Sign in, link phones, receipts, support replies</td><td>Our cloud database and Firebase Authentication</td></tr>
-<tr><td>Notification token</td><td>Family member</td><td>Deliver SOS and other alerts</td><td>Our cloud database</td></tr>
+<tr><td>Notification tokens</td><td>Family member and senior's phone</td><td>Deliver alerts to family; deliver "ring the phone" and "turn ringer on" requests to the senior's phone</td><td>Our cloud database (the senior phone's token is readable only by our servers)</td></tr>
 <tr><td>Purchase details (order ID, country, date)</td><td>Buyer</td><td>Unlock premium, handle refunds, tax records</td><td>Our cloud database. Card or UPI details are handled by Google Play; we never see them.</td></tr>
 <tr><td>Messages or photos you choose to check with AI</td><td>Whoever uses the feature</td><td>Answer "Is it a scam?", "Read it to me", read a medicine box</td><td>Sent to Google's Gemini service for the answer; <strong>not stored by us</strong></td></tr>
 <tr><td>Support tickets (name, email, message)</td><td>Whoever contacts us</td><td>Answer your request</td><td>Our cloud database and our support mailbox</td></tr>
@@ -30,12 +35,12 @@
 <p>We process data with your consent (given in the app, for example when allowing location or linking family), to perform our contract with you (providing the app and the features you bought), to meet legal obligations (tax and payment records), and for our legitimate interest in keeping the app secure and working. Under India's Digital Personal Data Protection Act, 2023, we act as the Data Fiduciary.</p>
 
 <h2>3. Family linking and consent</h2>
-<p>Linking lets a family member see and edit the senior's contacts and medicine list and receive their alerts. A link only happens when a code shown on the senior's phone is typed into the family member's phone. Family members must only link with the senior's knowledge and agreement. A link can be removed at any time by contacting us or by deleting the account.</p>
+<p>Linking lets a family member see and edit the senior's contacts, medicine list and settings, see the phone's status and today's doses, ring the phone or turn its ringer on, send photos and notes, and receive alerts. A link only happens when a code shown on the senior's phone is typed into the family member's phone. Family members must only link with the senior's knowledge and agreement. A link can be removed at any time by contacting us or by deleting the account.</p>
 
 <h2>4. Who we share data with</h2>
 <p>We use these service providers, who process data on our behalf under their own security and privacy terms:</p>
 <ul>
-<li><strong>Google Firebase</strong> (Authentication, Firestore database, Cloud Functions, Cloud Messaging, Analytics, Crashlytics, App Check), hosted mainly in Google Cloud's Mumbai region (asia-south1).</li>
+<li><strong>Google Firebase</strong> (Authentication, Firestore database, Cloud Storage, Cloud Functions, Cloud Messaging, Analytics, Crashlytics, App Check), hosted mainly in Google Cloud's Mumbai region (asia-south1).</li>
 <li><strong>Google Gemini API</strong> (via Firebase AI Logic) for the AI features. We use the paid service, under which Google does not use your content to improve its models.</li>
 <li><strong>Google Play</strong> for payments and refunds.</li>
 <li><strong>Zoho Mail</strong> to send and receive support and billing emails.</li>
@@ -45,7 +50,9 @@
 <h2>5. How long we keep it</h2>
 <ul>
 <li>Account, device, contacts and medicine data: until you delete the account or the app has been inactive for 24 months.</li>
-<li>SOS and missed-dose alerts: 90 days.</li>
+<li>SOS, check-in, safety and missed-dose alerts, and dose records: 90 days.</li>
+<li>Photos and notes from family: 30 days.</li>
+<li>Phone status: only the latest report is kept (overwritten).</li>
 <li>Support tickets: 2 years after closing.</li>
 <li>Purchase records: 8 years, as required for tax records in India (kept without your email after account deletion).</li>
 <li>Analytics data: 14 months; crash reports: 90 days.</li>

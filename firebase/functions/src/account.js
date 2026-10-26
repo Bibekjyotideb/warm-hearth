@@ -37,7 +37,12 @@ exports.deleteMyAccount = onCall({ region: cfg.REGION, secrets: SMTP_SECRETS }, 
   await Promise.all(linked.docs.map((d) => d.ref.update({ family: admin.firestore.FieldValue.arrayRemove(uid) })));
 
   const owned = await db.collection("devices").where("ownerUid", "==", uid).get();
-  for (const d of owned.docs) await db.recursiveDelete(d.ref);
+  for (const d of owned.docs) {
+    await db.recursiveDelete(d.ref);
+    await db.doc(`deviceTokens/${d.id}`).delete().catch(() => null);
+    await db.doc(`alertState/${d.id}`).delete().catch(() => null);
+    await admin.storage().bucket().deleteFiles({ prefix: `notes/${d.id}/` }).catch(() => null);
+  }
 
   const tickets = await db.collection("tickets").where("uid", "==", uid).get();
   for (const t of tickets.docs) await db.recursiveDelete(t.ref);

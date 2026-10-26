@@ -135,6 +135,18 @@ private fun TicketList(onBack: () -> Unit, onOpen: (Ticket) -> Unit, onNew: () -
         BigButton(stringResource(R.string.new_message), icon = Icons.Filled.Add, onClick = onNew)
         Spacer(Modifier.height(Spacing.l))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            // Answers to common questions, editable over the air (Remote Config help_faq_json).
+            val faq = com.lusanetech.warmhearth.util.RemoteFlags.faq(java.util.Locale.getDefault().language == "hi")
+            items(faq.size) { i ->
+                var expanded by remember { mutableStateOf(false) }
+                Column(
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surface)
+                        .clickable { expanded = !expanded }.padding(Spacing.l),
+                ) {
+                    Text(faq[i].q, style = MaterialTheme.typography.titleMedium)
+                    if (expanded) Text(faq[i].a, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = Spacing.s))
+                }
+            }
             items(tickets, key = { it.id }) { t ->
                 Column(
                     Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surface)

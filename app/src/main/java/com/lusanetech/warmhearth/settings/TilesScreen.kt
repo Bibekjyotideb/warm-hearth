@@ -58,6 +58,7 @@ fun TilesScreen(settings: Settings, onBack: () -> Unit) {
     fun toggle(key: String, on: Boolean) = scope.launch {
         val next = if (on) settings.tiles + key else settings.tiles - key
         context.graph.prefs.setTiles(next.distinct())
+        context.graph.family.pushLocalSettings() // the family app shows the same tiles
     }
 
     Page(stringResource(R.string.home_tiles), onBack = onBack) {

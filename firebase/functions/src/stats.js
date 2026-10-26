@@ -72,7 +72,12 @@ exports.cleanupInactive = onSchedule({ schedule: "0 3 1 * *", timeZone: cfg.TIME
   const db = admin.firestore();
   const cutoff = ts(Date.now() - 730 * DAY);
   const old = await db.collection("devices").where("lastActiveAt", "<", cutoff).limit(500).get();
-  for (const d of old.docs) await db.recursiveDelete(d.ref);
+  for (const d of old.docs) {
+    await db.recursiveDelete(d.ref);
+    await db.doc(`deviceTokens/${d.id}`).delete().catch(() => null);
+    await db.doc(`alertState/${d.id}`).delete().catch(() => null);
+    await admin.storage().bucket().deleteFiles({ prefix: `notes/${d.id}/` }).catch(() => null);
+  }
   const oldUsers = await db.collection("users").where("lastActiveAt", "<", cutoff).limit(500).get();
   for (const u of oldUsers.docs) {
     await db.recursiveDelete(u.ref);

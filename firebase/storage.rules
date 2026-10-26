@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Photo notes from family to the senior's home screen: notes/{deviceId}/{noteId}.jpg
+// Only family members linked to that phone can upload; owner and family can read.
+// Photos are deleted when their note expires (30 days, see functions/src/safety.js onNoteDeleted).
+service firebase.storage {
+  match /b/{bucket}/o {
+    function dev(deviceId) {
+      return firestore.get(/databases/(default)/documents/devices/$(deviceId)).data;
+    }
+    match /notes/{deviceId}/{file} {
+      allow read: if request.auth != null
+        && (dev(deviceId).ownerUid == request.auth.uid || request.auth.uid in dev(deviceId).family);
+      allow create: if request.auth != null
+        && request.auth.uid in dev(deviceId).family
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid in dev(deviceId).family;
+    }
+  }
+}

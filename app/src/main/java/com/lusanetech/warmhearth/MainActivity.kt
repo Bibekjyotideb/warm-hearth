@@ -46,6 +46,9 @@ class MainActivity : ComponentActivity() {
         /** Emits when the user presses the Home button while we are already the launcher. */
         val homePressed = _homePressed.asSharedFlow()
         const val EXTRA_OPEN = "open"
+        /** Family mode: open this parent's dashboard (from a notification). */
+        const val EXTRA_DEVICE = "device"
+        val openDevice = MutableStateFlow<String?>(null)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +56,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val openOnStart = intent?.getStringExtra(EXTRA_OPEN)
         handleShare(intent)
+        intent?.getStringExtra(EXTRA_DEVICE)?.let { openDevice.value = it }
         updates = com.lusanetech.warmhearth.util.AppUpdates(this)
         setContent {
             val settings by graph.prefs.settings.collectAsStateWithLifecycle(initialValue = null)
@@ -83,6 +87,13 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) _homePressed.tryEmit(Unit)
         handleShare(intent)
+        intent.getStringExtra(EXTRA_DEVICE)?.let { openDevice.value = it }
+    }
+
+    /** Any touch counts as "phone used today" for family safety alerts (throttled, local only). */
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        com.lusanetech.warmhearth.safety.SafetyMonitor.markActive(this)
     }
 
     private fun handleShare(intent: Intent?) {

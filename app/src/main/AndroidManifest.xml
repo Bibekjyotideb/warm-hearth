@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <!-- Family safety: network type in the phone status; turning the ringer back on from Do Not Disturb -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <!-- A phone without a SIM / telephony can still install the app -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -89,6 +92,16 @@
             android:turnScreenOn="true"
             android:taskAffinity=".alert" />
 
+        <!-- "Ravi is trying to reach you": family rang this phone from theirs -->
+        <activity
+            android:name=".safety.FindPhoneActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:taskAffinity=".alert" />
+
         <!-- Where the camera app saves photos for "Read it to me" and the medicine reader -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -114,6 +127,19 @@
             android:name=".fall.FallDetectionService"
             android:exported="false"
             android:foregroundServiceType="health" />
+
+        <!-- Scam call shield: Android asks it about calls from numbers not saved in contacts (Android 10+) -->
+        <service
+            android:name=".calls.CallShieldService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+
+        <!-- "Turn ringer on" / "Ring her phone" buttons on family notifications -->
+        <receiver android:name=".family.AlertActionReceiver" android:exported="false" />
 
         <service
             android:name=".family.FamilyMessagingService"

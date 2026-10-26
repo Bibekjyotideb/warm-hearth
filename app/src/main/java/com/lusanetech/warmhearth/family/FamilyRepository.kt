@@ -37,12 +37,18 @@ data class RemoteEvent(val id: String, val type: String, val message: String, va
  *   devices/{deviceId}                 ownerUid, name, premium, family:[uid], lastPairCode
  *   devices/{deviceId}/contacts/{id}   name, phone, position, isEmergency, updatedAt, deleted
  *   devices/{deviceId}/medicines/{id}  name, dose, times, active, updatedAt, deleted
- *   devices/{deviceId}/events/{id}     type (sos | missed_dose), message, lat, lng, createdAt
+ *   devices/{deviceId}/events/{id}     type (sos | call_me | checkin | here | missed_dose | safety…), message, lat, lng
+ *   devices/{deviceId}/doses/{id}      medicineId, name, date, time, status (taken | missed)
+ *   devices/{deviceId}/notes/{id}      photo / note from family for the home screen (see RemoteControl)
+ *   devices/{deviceId}/commands/{id}   ring | ringer_on | sync, from family (see safety/RemoteCommands)
+ *   devices/{deviceId}.status          battery, ringer, last used… (see safety/SafetyMonitor)
+ *   devices/{deviceId}.settings        text size, tiles, call shield, safety alerts (see DeviceSettings)
+ *   deviceTokens/{deviceId}            this phone's FCM token, server-only read
  *   pairCodes/{code}                   deviceId, ownerUid, expiresAt
  *   users/{uid}                        fcmTokens:[token]
  *
  * Deletes are "tombstones" (deleted = true) so a phone that was offline can't resurrect them.
- * Photos stay on the senior's phone; the family sees initials.
+ * Photos of people and pills stay on the senior's phone; the family sees initials.
  */
 class FamilyRepository(
     private val context: Context,
@@ -103,17 +109,31 @@ class FamilyRepository(
             val id = ensureDeviceDoc() ?: run { seniorSyncStarted = false; return@launch }
             val doc = device(id)
 
+            registerDeviceToken(id)
+
             doc.addSnapshotListener { snap, _ ->
                 snap ?: return@addSnapshotListener
                 val family = (snap.get("family") as? List<*>)?.size ?: 0
                 val remotePremium = snap.getBoolean("premium") == true
+                val remote = DeviceSettings.from(snap.get("settings"))
                 scope.launch {
                     prefs.setPaired(family > 0)
                     if (family > 0) Telemetry.milestone(context, id, Telemetry.Step.LINKED_FAMILY)
                     // The server is the source of truth for premium (granted by verifyPurchase, revoked on refund).
                     if (remotePremium != prefs.current().premium) prefs.setPremium(remotePremium)
+                    // Settings the family changed from their phone (text size, tiles, call shield, check-in).
+                    if (remote.updatedAt > prefs.current().settingsAppliedAt) {
+                        prefs.applyRemote(remote.textScale, remote.tiles, remote.callShield, remote.checkInEnabled, remote.updatedAt)
+                    }
                 }
             }
+
+            // Backup for remote commands if the push was delayed (the FCM path is in FamilyMessagingService).
+            doc.collection("commands").orderBy("createdAt", Query.Direction.DESCENDING).limit(5)
+                .addSnapshotListener { snap, _ ->
+                    snap ?: return@addSnapshotListener
+                    com.lusanetech.warmhearth.safety.RemoteCommands.fromSnapshot(context, id, snap.documents)
+                }
 
             doc.collection("contacts").addSnapshotListener { snap, _ ->
                 snap ?: return@addSnapshotListener
@@ -202,6 +222,79 @@ class FamilyRepository(
         val task = device(s.deviceId).collection("events").add(data)
         withTimeoutOrNull(5_000) { runCatching { task.await() } }
         return true
+    }
+
+    /** This phone's push token, so family commands (ring, ringer on) reach it. Server-only read. */
+    fun registerDeviceToken(deviceId: String? = null) = scope.launch {
+        val id = deviceId ?: prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return@launch
+        if (uid() == null) return@launch
+        val token = runCatching { FirebaseMessaging.getInstance().token.await() }.getOrNull() ?: return@launch
+        runCatching {
+            fs.collection("deviceTokens").document(id)
+                .set(mapOf("token" to token, "updatedAt" to FieldValue.serverTimestamp())).await()
+        }
+    }
+
+    /** Daily "I'm OK". Free on every plan; the family gets a gentle notification (they can turn it off). */
+    suspend fun checkIn(): Boolean {
+        val s = prefs.current()
+        prefs.setLastCheckInDay(MedicineScheduler.today())
+        com.lusanetech.warmhearth.safety.SafetyMonitor.markActive(context)
+        if (!s.paired || s.deviceId.isBlank() || uid() == null) return false
+        device(s.deviceId).update("lastCheckInAt", FieldValue.serverTimestamp())
+        val name = s.seniorName.ifBlank { context.getString(com.lusanetech.warmhearth.R.string.your_family_member) }
+        return sendEvent("checkin", context.getString(com.lusanetech.warmhearth.R.string.family_checkin, name))
+    }
+
+    /** "Ask my family to call me". Free on every plan. */
+    suspend fun askToBeCalled(): Boolean {
+        val name = prefs.current().seniorName.ifBlank { context.getString(com.lusanetech.warmhearth.R.string.your_family_member) }
+        return sendEvent("call_me", context.getString(com.lusanetech.warmhearth.R.string.family_call_me, name))
+    }
+
+    /** Taken / missed dose, so the family's dashboard shows today's medicines. */
+    suspend fun recordDose(medicineId: String, name: String, slot: String, taken: Boolean) {
+        val s = prefs.current()
+        if (!s.paired || s.deviceId.isBlank() || uid() == null) return
+        val (date, time) = slot.split(" ").let { (it.getOrNull(0) ?: "") to (it.getOrNull(1) ?: "") }
+        val docId = "${medicineId}_${date}_$time"
+        val ref = device(s.deviceId).collection("doses").document(docId)
+        // Never downgrade "taken" to "missed" (the missed check can race a late "I took it").
+        if (!taken && runCatching { ref.get().await().getString("status") }.getOrNull() == "taken") return
+        ref.set(
+            mapOf(
+                "medicineId" to medicineId, "name" to name, "date" to date, "time" to time,
+                "status" to if (taken) "taken" else "missed",
+                "at" to FieldValue.serverTimestamp(),
+                "expireAt" to Timestamp(java.util.Date(System.currentTimeMillis() + 90L * 86_400_000)),
+            ),
+        )
+    }
+
+    /** Photos and notes from family for the home screen, newest first. */
+    fun observeNotesForSenior(): Flow<List<FamilyNote>> = callbackFlow {
+        val id = prefs.current().deviceId
+        if (id.isBlank() || uid() == null) { trySend(emptyList()); awaitClose { }; return@callbackFlow }
+        val reg = device(id).collection("notes").orderBy("createdAt", Query.Direction.DESCENDING).limit(10)
+            .addSnapshotListener { snap, _ -> trySend(snap?.documents?.map { it.toNote() } ?: emptyList()) }
+        awaitClose { reg.remove() }
+    }
+
+    fun markNoteSeen(noteId: String) = scope.launch {
+        val id = prefs.current().deviceId.takeIf { it.isNotBlank() } ?: return@launch
+        device(id).collection("notes").document(noteId).update("seenAt", FieldValue.serverTimestamp())
+    }
+
+    /** Text size / tiles / call shield changed on this phone: tell the family's phone too. */
+    fun pushLocalSettings() = scope.launch {
+        val s = prefs.current()
+        if (s.deviceId.isBlank() || uid() == null) return@launch
+        val now = System.currentTimeMillis()
+        prefs.applyRemote(null, null, null, null, now)
+        device(s.deviceId).set(
+            mapOf("settings" to mapOf("textScale" to s.fontScale, "tiles" to s.tiles, "callShield" to s.callShield, "updatedAt" to now)),
+            SetOptions.merge(),
+        )
     }
 
     private fun pushContact(deviceId: String, c: FavoriteContact) {
@@ -299,7 +392,9 @@ class FamilyRepository(
                 trySend(
                     snap?.documents?.map {
                         RemoteEvent(
-                            it.id, it.getString("type") ?: "", it.getString("message") ?: "",
+                            it.id, it.getString("type") ?: "",
+                            // Alerts raised by the server come in English and Hindi.
+                            (if (java.util.Locale.getDefault().language == "hi") it.getString("message_hi") else null) ?: it.getString("message") ?: "",
                             it.getDouble("lat"), it.getDouble("lng"), it.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                         )
                     } ?: emptyList(),
@@ -314,6 +409,15 @@ class FamilyRepository(
     fun remoteDeleteMedicine(deviceId: String, id: String) = tombstone(deviceId, "medicines", id)
 
     // ------------------------------------------------------------------ mapping
+
+    internal fun DocumentSnapshot.toNote() = FamilyNote(
+        id = id,
+        fromName = getString("fromName") ?: "",
+        text = getString("text") ?: "",
+        photoUrl = getString("photoUrl"),
+        createdAt = getTimestamp("createdAt")?.toDate()?.time ?: System.currentTimeMillis(),
+        seenAt = getTimestamp("seenAt")?.toDate()?.time,
+    )
 
     private fun FavoriteContact.toMap() = mapOf(
         "name" to name, "phone" to phone, "position" to position, "isEmergency" to isEmergency,

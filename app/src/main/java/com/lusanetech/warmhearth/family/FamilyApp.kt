@@ -1,10 +1,7 @@
 package com.lusanetech.warmhearth.family
 
 import android.Manifest
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,68 +11,73 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import com.lusanetech.warmhearth.MainActivity
 import com.lusanetech.warmhearth.R
 import com.lusanetech.warmhearth.billing.PaywallScreen
 import com.lusanetech.warmhearth.billing.findActivity
-import com.lusanetech.warmhearth.calls.ContactEditorDialog
 import com.lusanetech.warmhearth.data.AppMode
-import com.lusanetech.warmhearth.data.FavoriteContact
-import com.lusanetech.warmhearth.data.Medicine
 import com.lusanetech.warmhearth.graph
-import com.lusanetech.warmhearth.meds.MedicineEditorDialog
-import com.lusanetech.warmhearth.meds.MedicineList
 import com.lusanetech.warmhearth.ui.BigButton
 import com.lusanetech.warmhearth.ui.Page
 import com.lusanetech.warmhearth.ui.Palette
-import com.lusanetech.warmhearth.ui.PersonAvatar
+import com.lusanetech.warmhearth.util.RemoteFlags
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.util.Locale
+
+/** Where the family app is. Flat, like the senior side: Back always goes one step up. */
+sealed interface FamilyRoute {
+    data object Home : FamilyRoute
+    data object Support : FamilyRoute
+    data class Dashboard(val id: String) : FamilyRoute
+    data class People(val id: String) : FamilyRoute
+    data class Medicines(val id: String) : FamilyRoute
+    data class HomeSetup(val id: String) : FamilyRoute
+    data class Safety(val id: String) : FamilyRoute
+    data class Shield(val id: String) : FamilyRoute
+    data class Notes(val id: String) : FamilyRoute
+    data class Paywall(val id: String) : FamilyRoute
+}
 
 /**
- * Family mode: the son/daughter's phone. Normal-sized UI is fine here, but we keep the same
- * components so the app feels like one product.
+ * Family mode: the son's / daughter's phone. A dashboard per parent:
+ * are they OK, is the phone reachable, today's medicines, one-tap fixes, photos for their home screen.
  */
 @Composable
 fun FamilyApp() {
@@ -86,19 +88,26 @@ fun FamilyApp() {
         FamilySignIn(onSignedIn = { signedIn = true })
         return
     }
-    val devices by remember { graph.family.observeMyDevices() }.collectAsState(initial = null)
-    var showSupport by remember { mutableStateOf(false) }
-    var confirmDelete by remember { mutableStateOf(false) }
+    val devices by remember { graph.remote.observeDevices() }.collectAsState(initial = null)
     val settings by graph.prefs.settings.collectAsState(initial = null)
-    var openDevice by remember { mutableStateOf<RemoteDevice?>(null) }
-    var linking by remember { mutableStateOf(false) }
-    var paywallFor by remember { mutableStateOf<String?>(null) }
+    var route by remember { mutableStateOf<FamilyRoute>(FamilyRoute.Home) }
+    var autoOpened by rememberSaveable { mutableStateOf(false) }
 
     val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= 33) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         graph.family.registerFamilyToken()
         graph.family.watchFamilyPremium()
+    }
+    // Opened from a notification about one parent.
+    LaunchedEffect(Unit) {
+        MainActivity.openDevice.collect { id -> if (id != null) { route = FamilyRoute.Dashboard(id); MainActivity.openDevice.value = null } }
+    }
+    // One parent linked (the usual case): go straight to their dashboard.
+    LaunchedEffect(devices) {
+        val list = devices ?: return@LaunchedEffect
+        if (!autoOpened && list.size == 1 && route == FamilyRoute.Home) route = FamilyRoute.Dashboard(list.first().id)
+        if (list.isNotEmpty()) autoOpened = true
     }
     // Ask for a Play rating once a parent's phone has been linked for 3 days (they've seen it work).
     LaunchedEffect(devices) {
@@ -109,70 +118,105 @@ fun FamilyApp() {
             (a as? androidx.activity.ComponentActivity)?.let { com.lusanetech.warmhearth.util.AppUpdates.maybeAskForReview(it) }
         }
     }
-    // A family member who already bought the unlock gets it on every parent phone they link:
-    // restore() re-sends the purchase to the server with the current list of linked phones.
+    // A subscriber gets Premium on every parent phone they link: restore() re-sends the purchase
+    // to the server with the current list of linked phones.
     LaunchedEffect(devices, settings?.premium) {
         graph.billing.familyDeviceIds = devices.orEmpty().map { it.id }
         if (settings?.premium == true && devices.orEmpty().any { !it.premium }) graph.billing.restore()
     }
 
-    if (showSupport) {
-        BackHandler { showSupport = false }
-        com.lusanetech.warmhearth.support.SupportScreen(onBack = { showSupport = false })
-        return
-    }
-    paywallFor?.let { id ->
-        BackHandler { paywallFor = null }
-        PaywallScreen(onBack = { paywallFor = null }, forDeviceId = id)
-        return
-    }
-    openDevice?.let { d ->
-        val live = devices?.firstOrNull { it.id == d.id } ?: d
-        BackHandler { openDevice = null }
-        DeviceScreen(live, onBack = { openDevice = null }, onUnlock = { paywallFor = live.id })
-        return
-    }
-
-    Page(stringResource(R.string.family_title), onBack = null) {
-        val list = devices
-        if (list.isNullOrEmpty()) {
-            Text(stringResource(R.string.family_empty), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(16.dp))
+    val up: () -> Unit = {
+        route = when (val r = route) {
+            is FamilyRoute.Dashboard, FamilyRoute.Support, FamilyRoute.Home -> FamilyRoute.Home
+            is FamilyRoute.People -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Medicines -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.HomeSetup -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Safety -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Shield -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Notes -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Paywall -> FamilyRoute.Dashboard(r.id)
         }
-        list?.forEach { d ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable { openDevice = d }
-                    .padding(16.dp),
-            ) {
-                PersonAvatar(d.name.ifBlank { "?" }, null, 56.dp)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(d.name.ifBlank { stringResource(R.string.unnamed_phone) }, style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        stringResource(if (d.premium) R.string.premium_active else R.string.free_plan),
-                        color = if (d.premium) Palette.Green else Palette.Grey,
-                    )
-                }
+    }
+    BackHandler(enabled = route != FamilyRoute.Home, onBack = up)
+
+    fun device(id: String) = devices?.firstOrNull { it.id == id }
+    val go: (FamilyRoute) -> Unit = { route = it }
+
+    when (val r = route) {
+        FamilyRoute.Home -> FamilyHome(devices, onOpen = { go(FamilyRoute.Dashboard(it)) }, onSupport = { go(FamilyRoute.Support) }, onSignedOut = { signedIn = false })
+        FamilyRoute.Support -> com.lusanetech.warmhearth.support.SupportScreen(onBack = up)
+        is FamilyRoute.Paywall -> PaywallScreen(onBack = up, forDeviceId = r.id)
+        else -> {
+            val id = when (r) {
+                is FamilyRoute.Dashboard -> r.id; is FamilyRoute.People -> r.id; is FamilyRoute.Medicines -> r.id
+                is FamilyRoute.HomeSetup -> r.id; is FamilyRoute.Safety -> r.id; is FamilyRoute.Shield -> r.id
+                is FamilyRoute.Notes -> r.id; else -> ""
+            }
+            val d = device(id)
+            if (d == null) {
+                // Still loading, or this phone was unlinked.
+                if (devices != null) LaunchedEffect(Unit) { route = FamilyRoute.Home }
+                return
+            }
+            when (r) {
+                is FamilyRoute.Dashboard -> DeviceDashboard(d, showBack = (devices?.size ?: 0) > 1, onBack = up, go = go)
+                is FamilyRoute.People -> RemotePeopleScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+                is FamilyRoute.Medicines -> RemoteMedicinesScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+                is FamilyRoute.HomeSetup -> HomeSetupScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+                is FamilyRoute.Safety -> SafetySettingsScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+                is FamilyRoute.Shield -> CallShieldSettingsScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+                is FamilyRoute.Notes -> NotesScreen(d, onBack = up)
+                else -> Unit
             }
         }
+    }
+}
+
+/** The list of linked parents (shown when there are several, or none yet). */
+@Composable
+private fun FamilyHome(devices: List<DeviceState>?, onOpen: (String) -> Unit, onSupport: () -> Unit, onSignedOut: () -> Unit) {
+    val context = LocalContext.current
+    val graph = context.graph
+    var linking by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    Column(
+        Modifier.fillMaxSize().background(Palette.Background).statusBarsPadding().navigationBarsPadding()
+            .verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Text(stringResource(R.string.family_title), style = MaterialTheme.typography.headlineLarge)
+
+        // Remote Config: tips, offers, "new in this version". No release needed.
+        RemoteFlags.familyPromo(Locale.getDefault().language == "hi").takeIf { it.isNotBlank() }?.let { promo ->
+            Row(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(Palette.EmberSoft).padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Campaign, null, tint = Palette.Ember)
+                Spacer(Modifier.width(10.dp))
+                Text(promo, style = MaterialTheme.typography.bodyLarge, color = Palette.Ink)
+            }
+        }
+
+        when {
+            devices == null -> Unit
+            devices.isEmpty() -> EmptyFamily()
+            else -> devices.forEach { d -> DeviceSummaryCard(d) { onOpen(d.id) } }
+        }
+
+        BigButton(stringResource(if (devices.isNullOrEmpty()) R.string.link_a_phone else R.string.link_another_phone), icon = Icons.Filled.Link) { linking = true }
+
         Spacer(Modifier.height(12.dp))
-        BigButton(stringResource(R.string.link_a_phone), icon = Icons.Filled.Link, color = Palette.Green) { linking = true }
-        Spacer(Modifier.weight(1f))
         GoogleAccount.signedInEmail?.let { Text(stringResource(R.string.signed_in_as, it), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft) }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
-            TextButton(onClick = { showSupport = true }) { Text(stringResource(R.string.help_support)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = onSupport) { Text(stringResource(R.string.help_support)) }
             TextButton(onClick = {
                 graph.scope.launch { context.findActivity()?.let { GoogleAccount.signOut(it) } }
-                signedIn = false
+                onSignedOut()
             }) { Text(stringResource(R.string.sign_out)) }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TextButton(onClick = { graph.scope.launch { graph.prefs.setMode(AppMode.UNSET) } }) { Text(stringResource(R.string.switch_to_senior_mode)) }
             TextButton(onClick = { confirmDelete = true }) { Text(stringResource(R.string.delete_my_account), color = Palette.Red) }
         }
@@ -199,6 +243,19 @@ fun FamilyApp() {
             },
             dismissButton = { TextButton(enabled = !busy, onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
         )
+    }
+}
+
+@Composable
+private fun EmptyFamily() {
+    Column(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).background(Palette.Surface).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(stringResource(R.string.family_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        listOf(R.string.family_empty_1, R.string.family_empty_2, R.string.family_empty_3).forEachIndexed { i, s ->
+            Text("${i + 1}. " + stringResource(s), style = MaterialTheme.typography.bodyLarge, color = Palette.InkSoft)
+        }
     }
 }
 
@@ -240,104 +297,6 @@ private fun LinkDialog(onDismiss: () -> Unit) {
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
-}
-
-@Composable
-private fun DeviceScreen(device: RemoteDevice, onBack: () -> Unit, onUnlock: () -> Unit) {
-    val context = LocalContext.current
-    val family = context.graph.family
-    val events by remember(device.id) { family.observeEvents(device.id) }.collectAsState(initial = emptyList())
-    val contacts by remember(device.id) { family.observeContacts(device.id) }.collectAsState(initial = emptyList())
-    val meds by remember(device.id) { family.observeMedicines(device.id) }.collectAsState(initial = emptyList())
-    var tab by remember { mutableIntStateOf(0) }
-    var editContact by remember { mutableStateOf<FavoriteContact?>(null) }
-    var editMed by remember { mutableStateOf<Medicine?>(null) }
-
-    Page(device.name.ifBlank { stringResource(R.string.unnamed_phone) }, onBack = onBack) {
-        if (!device.premium) {
-            BigButton(stringResource(R.string.unlock_for_phone), color = Palette.Orange, icon = Icons.Filled.Star, onClick = onUnlock)
-            Text(stringResource(R.string.remote_needs_premium), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 8.dp))
-        }
-        TabRow(selectedTabIndex = tab) {
-            listOf(R.string.tab_alerts, R.string.tab_people, R.string.tab_medicines).forEachIndexed { i, label ->
-                Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(label)) })
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        when (tab) {
-            0 -> LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (events.isEmpty()) item { Text(stringResource(R.string.no_alerts), style = MaterialTheme.typography.titleMedium) }
-                items(events, key = { it.id }) { e ->
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(if (e.type == "sos") MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surface)
-                            .clickable(enabled = e.lat != null) {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${e.lat},${e.lng}")))
-                            }
-                            .padding(12.dp),
-                    ) {
-                        Text(e.message, style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            DateUtils.getRelativeTimeSpanString(e.createdAt).toString() + (if (e.lat != null) " · " + stringResource(R.string.tap_for_map) else ""),
-                            style = MaterialTheme.typography.bodyMedium, color = Palette.Grey,
-                        )
-                    }
-                }
-            }
-
-            1 -> Column {
-                BigButton(stringResource(R.string.add_new_person), icon = Icons.Filled.PersonAdd, color = Palette.Teal, enabled = device.premium) {
-                    editContact = FavoriteContact(id = UUID.randomUUID().toString(), name = "", phone = "", position = contacts.size, isEmergency = contacts.none { it.isEmergency })
-                }
-                Spacer(Modifier.height(8.dp))
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(contacts, key = { it.id }) { c ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surface)
-                                .clickable(enabled = device.premium) { editContact = c }.padding(12.dp),
-                        ) {
-                            Icon(Icons.Filled.Phone, contentDescription = null, tint = if (c.isEmergency) Palette.Red else Palette.Brand)
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(c.name, style = MaterialTheme.typography.titleMedium)
-                                Text(c.phone, style = MaterialTheme.typography.bodyMedium)
-                            }
-                            if (device.premium) IconButton(onClick = { family.remoteDeleteContact(device.id, c.id) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = Palette.Red)
-                            }
-                        }
-                    }
-                }
-            }
-
-            else -> Column {
-                BigButton(stringResource(R.string.add_medicine), icon = Icons.Filled.Add, color = Palette.Orange, enabled = device.premium) {
-                    editMed = Medicine(id = UUID.randomUUID().toString(), name = "", times = "08:00")
-                }
-                Spacer(Modifier.height(8.dp))
-                MedicineList(
-                    meds,
-                    onEdit = { if (device.premium) editMed = it },
-                    onDelete = { if (device.premium) family.remoteDeleteMedicine(device.id, it.id) },
-                )
-            }
-        }
-    }
-
-    // Photos are added on the parent's phone itself; the family side edits names, numbers and times.
-    editContact?.let { c ->
-        ContactEditorDialog(c, allowPhoto = false, onDismiss = { editContact = null }) {
-            family.remoteSaveContact(device.id, it); editContact = null
-        }
-    }
-    editMed?.let { m ->
-        MedicineEditorDialog(m, allowPhoto = false, onDismiss = { editMed = null }) {
-            family.remoteSaveMedicine(device.id, it); editMed = null
-        }
-    }
 }
 
 /** First screen in family mode: why we need a Google account, then one tap to sign in. */

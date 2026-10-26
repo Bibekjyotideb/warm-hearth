@@ -120,6 +120,7 @@ fun TodayMedicinesScreen(onBack: () -> Unit) {
                         ) {
                             scope.launch {
                                 context.graph.db.doseLogs().insert(DoseLog(medicineId = med.id, slot = slot, takenAt = System.currentTimeMillis()))
+                                context.graph.family.recordDose(med.id, med.name, slot, taken = true)
                             }
                         }
                     }

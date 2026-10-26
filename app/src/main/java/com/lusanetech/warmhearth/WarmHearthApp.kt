@@ -48,6 +48,7 @@ class Graph(private val app: Application) {
     val scheduler = MedicineScheduler(app, db)
     val family = FamilyRepository(app, db, prefs, scheduler, scope)
     val billing = BillingManager(app, prefs, family, scope)
+    val remote = com.lusanetech.warmhearth.family.RemoteControl(app)
 
     fun start() {
         scope.launch {
@@ -59,6 +60,7 @@ class Graph(private val app: Application) {
                 family.startSeniorSync()
                 scheduler.rescheduleAll()
                 Telemetry.heartbeat(app, "devices", prefs.ensureDeviceId())
+                com.lusanetech.warmhearth.safety.SafetyMonitor.start(app) // status for family safety alerts
                 if (s.fallDetection && s.premium && RemoteFlags.fallDetectionEnabled) FallDetectionService.start(app)
                 if (!RemoteFlags.fallDetectionEnabled) FallDetectionService.stop(app) // remote kill switch
             }

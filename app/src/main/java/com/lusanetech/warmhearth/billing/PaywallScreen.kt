@@ -77,7 +77,7 @@ fun PaywallScreen(onBack: () -> Unit, forDeviceId: String? = null) {
     val plans by billing.plans.collectAsState()
     val error by billing.error.collectAsState()
     val settings by context.graph.prefs.settings.collectAsState(initial = null)
-    var selected by remember { mutableStateOf("yearly") }
+    var selected by remember { mutableStateOf(com.lusanetech.warmhearth.util.RemoteFlags.paywallDefaultPlan) }
     LaunchedEffect(Unit) { billing.connect(); Telemetry.event(context, "paywall_view") }
 
     val yearly = plans.firstOrNull { it.basePlanId == "yearly" }
@@ -88,8 +88,16 @@ fun PaywallScreen(onBack: () -> Unit, forDeviceId: String? = null) {
 
     Page(stringResource(R.string.unlock_everything), onBack = onBack) {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
-            Text(stringResource(R.string.paywall_pitch), style = MaterialTheme.typography.titleLarge)
-            listOf(R.string.benefit_family, R.string.benefit_meds, R.string.benefit_fall, R.string.benefit_contacts).forEach { b ->
+            // Headline and an optional offer line can be changed from Remote Config (A/B tests, festive offers).
+            val hindi = java.util.Locale.getDefault().language == "hi"
+            Text(
+                com.lusanetech.warmhearth.util.RemoteFlags.paywallHeadline(hindi).ifBlank { stringResource(R.string.paywall_pitch) },
+                style = MaterialTheme.typography.titleLarge,
+            )
+            com.lusanetech.warmhearth.util.RemoteFlags.paywallOffer(hindi).takeIf { it.isNotBlank() }?.let {
+                com.lusanetech.warmhearth.ui.Chip(it, com.lusanetech.warmhearth.ui.Tone.Ember)
+            }
+            listOf(R.string.benefit_safety, R.string.benefit_family, R.string.benefit_ring, R.string.benefit_meds, R.string.benefit_fall, R.string.benefit_contacts).forEach { b ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Palette.Green, modifier = Modifier.size(28.dp))
                     Spacer(Modifier.width(Spacing.m))

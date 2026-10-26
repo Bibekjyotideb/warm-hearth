@@ -1,20 +1,50 @@
-// The live phone in the hero: tap a face, hold SOS, tap Speak. Mirrors what the app does.
+// The hero: their phone (left) and yours (right), linked. What happens on theirs shows up on yours,
+// the way the real apps behave: "I'm OK", "Ask my family to call me", hold SOS, tap a face.
 (() => {
-  const root = document.querySelector("#demo .app-home");
+  const root = document.querySelector("#demo-senior .app-home");
+  const fam = document.querySelector("#demo-family .app-family");
   if (!root) return;
-  const q = (s) => root.querySelector(s);
+  const q = (s, el = root) => el.querySelector(s);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dialog = q("[data-dialog]"), text = q("[data-dialog-text]"), av = q("[data-dialog-av]");
   const yes = q("[data-yes]"), no = q("[data-no]");
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const now = new Date();
-  q("[data-clock]").textContent = now.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+  const hm = now.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+  q("[data-clock]").textContent = hm;
   q("[data-date]").textContent = now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+  const hour = now.getHours();
+  q("[data-checkin] .app-card-title").textContent = (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening") + ", Kamala";
 
-  function open({ message, avatar, color, onYes }) {
+  // ---- family phone helpers
+  let pushTimer = 0;
+  function push(tone, title, body) {
+    if (!fam) return;
+    const p = q("[data-push]", fam);
+    p.className = `fam-push t-${tone}`;
+    q("[data-push-title]", fam).textContent = title;
+    q("[data-push-body]", fam).textContent = body;
+    requestAnimationFrame(() => p.classList.add("show"));
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => p.classList.remove("show"), 4200);
+  }
+  function hero(tone, title, sub) {
+    if (!fam) return;
+    q("[data-hero]", fam).className = `fam-hero t-${tone}`;
+    q("[data-hero-title]", fam).textContent = title;
+    q("[data-hero-sub]", fam).textContent = sub;
+  }
+  const used = () => {
+    if (!fam) return;
+    q("[data-used]", fam).textContent = "just now";
+    if (q("[data-hero-title]", fam).textContent === "All good") q("[data-hero-sub]", fam).textContent = "Used the phone just now";
+  };
+
+  // ---- dialog on their phone
+  function open({ message, avatar, tone, onYes }) {
     text.textContent = message;
     av.hidden = !avatar;
-    if (avatar) { av.textContent = avatar; av.style.setProperty("--c", color); }
+    if (avatar) { av.textContent = avatar; av.className = `av av-xl ${tone}`; }
     yes.hidden = !onYes;
     no.querySelector("span").textContent = onYes ? "No" : "OK";
     yes.onclick = onYes;
@@ -27,11 +57,33 @@
   root.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
   root.querySelectorAll(".app-face").forEach((b) => b.addEventListener("click", () => {
-    const a = b.querySelector(".av");
-    open({ message: `Call ${b.dataset.name}?`, avatar: a.textContent, color: a.style.getPropertyValue("--c"),
-      onYes: () => open({ message: `Calling ${b.dataset.name}…`, avatar: a.textContent, color: a.style.getPropertyValue("--c") }) });
+    const a = b.querySelector(".av"), tone = [...a.classList].find((c) => c.startsWith("t-"));
+    used();
+    open({ message: `Call ${b.dataset.name}?`, avatar: a.textContent, tone,
+      onYes: () => open({ message: `Calling ${b.dataset.name}…`, avatar: a.textContent, tone }) });
   }));
-  q("[data-speak]").addEventListener("click", () => open({ message: 'Say "Call Asha", "WhatsApp kholo" or "दवा"' }));
+  q("[data-speak]").addEventListener("click", () => open({ message: 'Say "Call Ravi", "WhatsApp kholo" or "दवा"' }));
+
+  // "I'm OK"
+  q("[data-ok]").addEventListener("click", () => {
+    const card = q("[data-checkin]");
+    card.classList.add("done");
+    q("[data-ok]").hidden = true;
+    q("[data-checkin-sub]").hidden = true;
+    q("[data-ok-done]").hidden = false;
+    used();
+    if (fam) q("[data-checkin-val]", fam).textContent = `OK at ${hm}`;
+    push("grn", "✅ All good today", "Maa says she's OK today.");
+  });
+
+  // "Ask my family to call me"
+  const callme = q("[data-callme]");
+  callme.addEventListener("click", () => {
+    callme.className = "app-soft t-grn";
+    callme.querySelector("span").textContent = "Sent. They'll call you soon";
+    used();
+    push("blu", "📞 Call request", "Maa would like you to call her.");
+  });
 
   // Hold SOS for 3 seconds (keyboard: hold Space or Enter)
   const sos = q("[data-sos]"), fill = sos.querySelector(".fill"), label = sos.querySelector(".lbl");
@@ -42,7 +94,14 @@
     fill.style.transform = `scaleX(${Math.min(1, 1 - left / HOLD)})`;
     label.textContent = left > 0 ? `Hold… ${Math.ceil(left / 1000)}` : "Get help";
     if (left > 0) raf = requestAnimationFrame(tick);
-    else { reset(); open({ message: "Family alerted with your location. Calling Ravi now." }); }
+    else {
+      reset();
+      open({ message: "Family alerted with your location. Calling Ravi now." });
+      used();
+      hero("red", "Maa pressed SOS", "Just now. Tap to see her location");
+      push("red", "🆘 SOS", "Maa pressed SOS and needs help. Tap for her location.");
+      setTimeout(() => hero("grn", "All good", "Used the phone just now"), 9000);
+    }
   }
   function begin(e) {
     if (e.type === "keydown" && (e.repeat || ![" ", "Enter"].includes(e.key))) return;

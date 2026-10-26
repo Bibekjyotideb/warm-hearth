@@ -64,6 +64,11 @@ unlocked and how to get help. Preview every email: `cd firebase/functions && npm
    **App Check → Manage debug tokens**.
 8. **Crashlytics** → enable.
 9. **Hosting** → Get started (just click through; the config is already in `firebase/firebase.json`).
+10. **Storage** → Get started, location **asia-south1**. Holds photos family send to a parent's home
+    screen. Deleted automatically 30 days later (TTL on the note + `onNoteDeleted`). As a safety net,
+    add a lifecycle rule: Google Cloud console → Cloud Storage → bucket → Lifecycle → *Delete object,
+    age 35 days, prefix `notes/`*.
+11. **In-App Messaging** → nothing to set up; it's ready for pop-up campaigns (see below).
 
 ### Remote Config (the "over-the-air" switches)
 Add these parameters (defaults already in `app/.../util/RemoteFlags.kt`). Publish to change behaviour
@@ -80,9 +85,33 @@ on every phone within about an hour, with no app update.
 | `min_version_code` | 1 | An old version is broken: forces an immediate Play update |
 | `recommended_version_code` | 1 | Nudge everyone to a new version (background update) |
 | `announcement_en` / `announcement_hi` | "" | Banner on every senior's home screen |
+| `family_promo_en` / `family_promo_hi` | "" | Card at the top of the family app: tips, "new in this version", offers |
+| `paywall_headline_en` / `_hi` | "" | Test a different paywall pitch without a release |
+| `paywall_offer_en` / `_hi` | "" | Highlighted offer line on the paywall (pair it with a Play Console offer) |
+| `paywall_default_plan` | yearly | Pre-select monthly instead, for a test |
+| `default_tiles` | "" | Change the home-screen buttons for **new** installs, e.g. `phone,contacts,whatsapp,meds,scam,apps` |
+| `help_faq_json` | "" | Add answers to Help & support: `[{"q_en":"…","a_en":"…","q_hi":"…","a_hi":"…"}]` |
+| `checkin_enabled` | true | Kill switch for the daily "I'm OK" card |
+| `notes_enabled` | true | Kill switch for photos & notes |
+| `call_shield_enabled` | true | Kill switch for the scam call shield UI (if a phone maker misbehaves) |
+| `remote_ring_enabled` | true | Hide "Ring phone" in the family app |
 
-**What can't be changed over the air:** Kotlin code, screens, permissions, libraries. Google Play forbids
-apps from downloading code. Those ship as a new release (see section 6).
+**Real-time:** the app listens for Remote Config updates, so a published change reaches open apps in
+seconds, and everyone else on their next app start (at most an hour).
+
+**Prices** are also over the air: they're read live from Play Console. Change a price or create an
+intro offer in Play Console → Monetize → Subscriptions; no release.
+
+**Pop-ups and campaigns:** Firebase console → Messaging → **In-App Messaging** → new campaign. Image,
+text, button and link, targeted by language, app version or Analytics audience (e.g. "family users
+without Premium"). No release.
+
+**Safety alert rules** (thresholds, wording) live in Cloud Functions (`functions/src/safetyRules.js`):
+change them and run `firebase deploy --only functions`. That's also over the air for every phone.
+
+**What can't be changed over the air:** Kotlin code, new screens, permissions, libraries. Google Play's
+policy forbids apps from downloading executable code, so those ship as a release (section 6). Phones
+install those updates automatically in the background; `min_version_code` forces it when needed.
 
 ---
 
@@ -100,10 +129,11 @@ firebase functions:secrets:set SMTP_PASS # the Zoho app password from step 1.4
 cd functions && npm install && npm test && cd ..
 cd ../web-src && npm install && npm run build && cd ../firebase
 
-firebase deploy --only firestore,functions,hosting
+firebase deploy --only firestore,storage,functions,hosting
 ```
 
-Deploy creates the Firestore indexes and the TTL policies (rate limits; SOS/medicine alerts after 90 days).
+Deploy creates the Firestore indexes and the TTL policies (rate limits; alerts and doses after 90 days;
+photo notes after 30 days) and the Storage rules.
 
 ### Custom domain: warmhearth.lusanetech.com (Spaceship DNS)
 1. Firebase console → **Hosting → Add custom domain** → `warmhearth.lusanetech.com`.
@@ -189,6 +219,8 @@ Add a teammate later the same way. Remove access with the Firebase Admin SDK or 
 | Firebase SDK breaking change | Firebase release notes | — | upgrade BoM, release |
 | Zoho app password revoked | emails stop, function logs "Email failed" | set a new `SMTP_PASS` secret, redeploy | — |
 | Something unknown in the AI | user reports | `ai_enabled=false` or `ai_prompt_note` | prompt fix in a release |
+| Phone makers delay the 30-min status report (aggressive battery savers) | false "offline" alerts in tickets | raise `OFFLINE_HOURS` in `safetyRules.js`, deploy functions | battery-optimisation guidance screen |
+| Android changes call screening / DND access rules | Android beta notes, tickets | `call_shield_enabled=false` | update code, release |
 
 ---
 
