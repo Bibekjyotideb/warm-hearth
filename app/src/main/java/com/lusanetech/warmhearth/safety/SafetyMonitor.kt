@@ -160,11 +160,14 @@ object SafetyMonitor {
                 "appVersion" to BuildConfig.VERSION_NAME,
                 "callsScreenedToday" to callsScreenedToday(c),
                 "canRestoreRinger" to Ringer.canChangeDnd(c),
+                "fallDetection" to (settings.fallDetection && settings.premium),
                 "reportedAt" to FieldValue.serverTimestamp(),
             )
             // Names of apps with a home-screen icon, once a day, so the family can pick tiles remotely.
             if (s.getString("apps_day", "") != today()) {
                 status["installedApps"] = Apps.load(c).take(80).map { mapOf("pkg" to it.packageName, "label" to it.label) }
+                // Reminder sounds on this phone, so the family can pick one per medicine.
+                status["tones"] = com.lusanetech.warmhearth.util.Tones.list(c).map { mapOf("title" to it.first, "uri" to it.second) }
                 s.edit().putString("apps_day", today()).apply()
             }
             val write = FirebaseFirestore.getInstance().collection("devices").document(settings.deviceId)
@@ -190,6 +193,7 @@ object SafetyMonitor {
 class StatusWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         runCatching { SafetyMonitor.reportNow(applicationContext) }
+        runCatching { com.lusanetech.warmhearth.health.HealthVitals.sync(applicationContext) }
         return Result.success()
     }
 }

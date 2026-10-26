@@ -96,6 +96,50 @@ class RemoteControl(private val context: Context) {
         true
     }.getOrElse { Log.w(TAG, "note", it); false }
 
+    /**
+     * A photo for a contact or medicine, chosen on the family phone. Uploaded to
+     * media/{deviceId}/{contacts|medicines}/{id}-{time}.jpg (a new name each time, so the phone
+     * sees a new URL); the parent's phone downloads its own copy. Old files are removed by the
+     * cleanupMedia function.
+     * Returns the download URL to save on the contact / medicine.
+     */
+    suspend fun uploadPhoto(deviceId: String, kind: String, id: String, photo: Uri): String? = runCatching {
+        val bytes = withContext(Dispatchers.IO) { compress(photo) } ?: return null
+        val ref = FirebaseStorage.getInstance().reference.child("media/$deviceId/$kind/$id-${System.currentTimeMillis()}.jpg")
+        ref.putBytes(bytes, StorageMetadata.Builder().setContentType("image/jpeg").build()).await()
+        ref.downloadUrl.await().toString()
+    }.getOrElse { Log.w(TAG, "photo", it); null }
+
+    /** Moves a contact up or down the parent's list (the home screen shows them in this order). */
+    fun reorderContacts(deviceId: String, ordered: List<com.lusanetech.warmhearth.data.FavoriteContact>) {
+        val now = System.currentTimeMillis()
+        val batch = fs.batch()
+        ordered.forEachIndexed { i, c ->
+            if (c.position != i) batch.update(device(deviceId).collection("contacts").document(c.id), mapOf("position" to i, "updatedAt" to now))
+        }
+        batch.commit()
+    }
+
+    /** Last 7 days of watch / band summaries, newest first. */
+    fun observeVitalsHistory(deviceId: String): Flow<List<DayVitals>> = callbackFlow {
+        val reg = device(deviceId).collection("vitals").orderBy("date", Query.Direction.DESCENDING).limit(7)
+            .addSnapshotListener { snap, _ ->
+                trySend(
+                    snap?.documents?.map {
+                        DayVitals(
+                            date = it.getString("date") ?: it.id,
+                            steps = it.getLong("stepsToday"), hrAvg = it.getLong("hrAvg")?.toInt(),
+                            hrMin = it.getLong("hrMin")?.toInt(), hrMax = it.getLong("hrMax")?.toInt(),
+                            sleepMinutes = it.getLong("sleepMinutes")?.toInt(), spo2 = it.getDouble("spo2"),
+                            bpSystolic = it.getLong("bpSystolic")?.toInt(), bpDiastolic = it.getLong("bpDiastolic")?.toInt(),
+                            glucose = it.getLong("glucoseMgDl")?.toInt(),
+                        )
+                    } ?: emptyList(),
+                )
+            }
+        awaitClose { reg.remove() }
+    }
+
     fun observeNotes(deviceId: String): Flow<List<FamilyNote>> = callbackFlow {
         val reg = device(deviceId).collection("notes").orderBy("createdAt", Query.Direction.DESCENDING).limit(20)
             .addSnapshotListener { snap, _ ->

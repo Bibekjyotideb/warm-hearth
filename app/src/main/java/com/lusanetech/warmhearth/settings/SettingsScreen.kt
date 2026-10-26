@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.FamilyRestroom
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PersonalInjury
@@ -124,12 +125,26 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
                 }
             }
 
+            // Medicine sound and voice commands
+            SectionCard(padding = 8.dp) {
+                Column(Modifier.padding(horizontal = 4.dp)) {
+                    val tones = remember { com.lusanetech.warmhearth.util.Tones.list(context) }
+                    com.lusanetech.warmhearth.util.TonePicker(settings.medTone, tones, includeDefault = false) {
+                        scope.launch { graph.prefs.setMedTone(it); graph.family.pushLocalSettings() }
+                    }
+                }
+                ToggleRow(
+                    stringResource(R.string.voice_commands), stringResource(R.string.voice_commands_sub), Icons.Filled.Mic, Tone.Ember,
+                    checked = settings.voiceCommands,
+                ) { on -> scope.launch { graph.prefs.setVoiceCommands(on); graph.family.pushLocalSettings() } }
+            }
+
             // Safety
             SectionCard(padding = 8.dp) {
                 ToggleRow(
                     stringResource(R.string.daily_checkin), stringResource(R.string.daily_checkin_sub), Icons.Filled.TaskAlt, Tone.Green,
                     checked = settings.checkInEnabled,
-                ) { on -> scope.launch { graph.prefs.setCheckInEnabled(on) } }
+                ) { on -> scope.launch { graph.prefs.setCheckInEnabled(on); graph.family.pushLocalSettings() } }
 
                 ToggleRow(
                     stringResource(R.string.fall_detection), stringResource(R.string.fall_detection_body), Icons.Filled.PersonalInjury, Tone.Red,
@@ -139,6 +154,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
                     scope.launch {
                         graph.prefs.setFallDetection(on)
                         if (on) FallDetectionService.start(context) else FallDetectionService.stop(context)
+                        graph.family.pushLocalSettings()
                     }
                 }
 
@@ -153,6 +169,9 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit, onOpen: (Screen) -> U
                     ) { if (!granted) systemScreen.launch(Ringer.accessIntent(newTask = false)) }
                 }
             }
+
+            // Watch / band readings (Health Connect), shared with linked family only after consent.
+            if (RemoteFlags.vitalsEnabled) HealthSection(settings, refresh, onRefresh = { refresh++ }, onPaywall = { onOpen(Screen.PAYWALL) })
 
             // Scam call shield (Android 10+)
             if (CallShield.available() && RemoteFlags.callShieldEnabled) {
@@ -280,4 +299,58 @@ private fun ToggleRow(
     onChange: (Boolean) -> Unit,
 ) {
     NavRow(title, icon, tone, subtitle = subtitle, trailing = { Switch(checked = checked, onCheckedChange = onChange) }) { onChange(!checked) }
+}
+
+@Composable
+private fun HealthSection(settings: Settings, refresh: Int, onRefresh: () -> Unit, onPaywall: () -> Unit) {
+    val context = LocalContext.current
+    val graph = context.graph
+    val scope = rememberCoroutineScope()
+    val hv = com.lusanetech.warmhearth.health.HealthVitals
+    val availability = remember(refresh) { hv.availability(context) }
+    var consent by remember { mutableStateOf(false) }
+    var granted by remember { mutableIntStateOf(-1) }
+    androidx.compose.runtime.LaunchedEffect(refresh, settings.vitalsShared) { granted = hv.grantedCount(context) }
+    val request = rememberLauncherForActivityResult(hv.requestContract()) { result ->
+        scope.launch {
+            if (result.any { it in hv.PERMISSIONS }) {
+                graph.prefs.setVitalsShared(true)
+                hv.sync(context, force = true)
+            }
+            onRefresh()
+        }
+    }
+
+    SectionCard {
+        Row {
+            Text(stringResource(R.string.health_readings), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            if (settings.vitalsShared && granted > 0) Chip(stringResource(R.string.on), Tone.Green)
+        }
+        Text(stringResource(R.string.health_readings_body), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+        Spacer(Modifier.height(10.dp))
+        when {
+            availability == com.lusanetech.warmhearth.health.HealthVitals.Availability.UNSUPPORTED ->
+                Text(stringResource(R.string.health_unsupported), style = MaterialTheme.typography.bodyMedium)
+            availability == com.lusanetech.warmhearth.health.HealthVitals.Availability.NEEDS_INSTALL ->
+                BigButton(stringResource(R.string.health_install)) { runCatching { context.startActivity(hv.installIntent()) } }
+            !settings.premium -> BigButton(stringResource(R.string.unlock_everything), color = Palette.Ember) { onPaywall() }
+            settings.vitalsShared && granted > 0 -> {
+                androidx.compose.material3.TextButton(onClick = { request.launch(hv.PERMISSIONS) }) { Text(stringResource(R.string.health_choose_readings)) }
+                androidx.compose.material3.TextButton(onClick = { scope.launch { hv.stopSharing(context); onRefresh() } }) {
+                    Text(stringResource(R.string.health_stop), color = Palette.Red)
+                }
+            }
+            else -> BigButton(stringResource(R.string.health_share)) { consent = true }
+        }
+    }
+
+    if (consent) {
+        AlertDialog(
+            onDismissRequest = { consent = false },
+            title = { Text(stringResource(R.string.health_consent_title)) },
+            text = { Text(stringResource(R.string.health_consent_body)) },
+            confirmButton = { TextButton(onClick = { consent = false; request.launch(hv.PERMISSIONS) }) { Text(stringResource(R.string.health_consent_yes)) } },
+            dismissButton = { TextButton(onClick = { consent = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }

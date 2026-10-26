@@ -115,15 +115,23 @@ class FamilyRepository(
                 snap ?: return@addSnapshotListener
                 val family = (snap.get("family") as? List<*>)?.size ?: 0
                 val remotePremium = snap.getBoolean("premium") == true
-                val remote = DeviceSettings.from(snap.get("settings"))
+                val remote = DeviceSettings.from(snap.get("settings"), includePin = true)
                 scope.launch {
                     prefs.setPaired(family > 0)
                     if (family > 0) Telemetry.milestone(context, id, Telemetry.Step.LINKED_FAMILY)
                     // The server is the source of truth for premium (granted by verifyPurchase, revoked on refund).
                     if (remotePremium != prefs.current().premium) prefs.setPremium(remotePremium)
                     // Settings the family changed from their phone (text size, tiles, call shield, check-in).
-                    if (remote.updatedAt > prefs.current().settingsAppliedAt) {
-                        prefs.applyRemote(remote.textScale, remote.tiles, remote.callShield, remote.checkInEnabled, remote.updatedAt)
+                    val before = prefs.current()
+                    if (remote.updatedAt > before.settingsAppliedAt) {
+                        prefs.applyRemote(remote)
+                        // Fall detection switched from the family's phone: start / stop the service here.
+                        val fall = remote.fallDetection
+                        if (fall != null && fall != before.fallDetection) {
+                            if (fall && prefs.current().premium && com.lusanetech.warmhearth.util.RemoteFlags.fallDetectionEnabled) {
+                                com.lusanetech.warmhearth.fall.FallDetectionService.start(context)
+                            } else if (!fall) com.lusanetech.warmhearth.fall.FallDetectionService.stop(context)
+                        }
                     }
                 }
             }
@@ -147,7 +155,9 @@ class FamilyRepository(
                             continue
                         }
                         val remote = d.toContact(keepPhoto = local?.photoPath) ?: continue
-                        if (local == null || remote.updatedAt > local.updatedAt) db.contacts().upsert(remote)
+                        if (local == null || remote.updatedAt > local.updatedAt) {
+                            db.contacts().upsert(remote.copy(photoPath = syncPhoto(d.id, remote.photoUrl, local?.photoUrl, local?.photoPath)))
+                        }
                     }
                     // Anything created before linking (or while offline) goes up.
                     db.contacts().getAll().filter { it.id !in remoteIds }.forEach { pushContact(id, it) }
@@ -165,8 +175,9 @@ class FamilyRepository(
                             if (local != null) { scheduler.cancel(local); db.medicines().delete(d.id); PhotoStore.delete(local.photoPath) }
                             continue
                         }
-                        val remote = d.toMedicine(keepPhoto = local?.photoPath) ?: continue
-                        if (local == null || remote.updatedAt > local.updatedAt) {
+                        val remote0 = d.toMedicine(keepPhoto = local?.photoPath) ?: continue
+                        if (local == null || remote0.updatedAt > local.updatedAt) {
+                            val remote = remote0.copy(photoPath = syncPhoto(d.id, remote0.photoUrl, local?.photoUrl, local?.photoPath))
                             local?.let { scheduler.cancel(it) }
                             db.medicines().upsert(remote)
                             scheduler.schedule(remote)
@@ -222,6 +233,17 @@ class FamilyRepository(
         val task = device(s.deviceId).collection("events").add(data)
         withTimeoutOrNull(5_000) { runCatching { task.await() } }
         return true
+    }
+
+    /**
+     * Photos the family added from their phone: download a new one, drop a removed one, keep
+     * photos taken on this phone (those have no URL and never leave it).
+     */
+    private suspend fun syncPhoto(id: String, remoteUrl: String?, localUrl: String?, localPath: String?): String? = when {
+        remoteUrl != null && remoteUrl != localUrl ->
+            PhotoStore.download(context, remoteUrl, id)?.also { PhotoStore.delete(localPath) } ?: localPath
+        remoteUrl == null && localUrl != null -> { PhotoStore.delete(localPath); null }
+        else -> localPath
     }
 
     /** This phone's push token, so family commands (ring, ringer on) reach it. Server-only read. */
@@ -290,19 +312,25 @@ class FamilyRepository(
         val s = prefs.current()
         if (s.deviceId.isBlank() || uid() == null) return@launch
         val now = System.currentTimeMillis()
-        prefs.applyRemote(null, null, null, null, now)
+        prefs.markApplied(now)
         device(s.deviceId).set(
-            mapOf("settings" to mapOf("textScale" to s.fontScale, "tiles" to s.tiles, "callShield" to s.callShield, "updatedAt" to now)),
+            mapOf(
+                "settings" to mapOf(
+                    "textScale" to s.fontScale, "tiles" to s.tiles, "callShield" to s.callShield,
+                    "checkIn" to mapOf("enabled" to s.checkInEnabled), "fallDetection" to s.fallDetection,
+                    "voiceCommands" to s.voiceCommands, "medTone" to s.medTone, "updatedAt" to now,
+                ),
+            ),
             SetOptions.merge(),
         )
     }
 
     private fun pushContact(deviceId: String, c: FavoriteContact) {
-        device(deviceId).collection("contacts").document(c.id).set(c.toMap())
+        device(deviceId).collection("contacts").document(c.id).set(c.toMap(), SetOptions.merge())
     }
 
     private fun pushMedicine(deviceId: String, m: Medicine) {
-        device(deviceId).collection("medicines").document(m.id).set(m.toMap())
+        device(deviceId).collection("medicines").document(m.id).set(m.toMap(), SetOptions.merge())
     }
 
     private fun tombstone(deviceId: String, collection: String, id: String) {
@@ -419,13 +447,16 @@ class FamilyRepository(
         seenAt = getTimestamp("seenAt")?.toDate()?.time,
     )
 
+    // photoUrl / photoPath belong to the family's uploads: written with merge so a phone-side save
+    // never wipes them, and cleared (null) when a photo is taken on this phone instead.
     private fun FavoriteContact.toMap() = mapOf(
         "name" to name, "phone" to phone, "position" to position, "isEmergency" to isEmergency,
-        "updatedAt" to updatedAt, "deleted" to false,
+        "onHome" to onHome, "photoUrl" to photoUrl, "updatedAt" to updatedAt, "deleted" to false,
     )
 
     private fun Medicine.toMap() = mapOf(
-        "name" to name, "dose" to dose, "times" to times, "active" to active, "updatedAt" to updatedAt, "deleted" to false,
+        "name" to name, "dose" to dose, "times" to times, "active" to active, "tone" to tone,
+        "photoUrl" to photoUrl, "updatedAt" to updatedAt, "deleted" to false,
     )
 
     private fun DocumentSnapshot.toContact(keepPhoto: String?): FavoriteContact? {
@@ -433,7 +464,7 @@ class FamilyRepository(
         return FavoriteContact(
             id = id, name = name, phone = getString("phone") ?: "", photoPath = keepPhoto,
             position = getLong("position")?.toInt() ?: 0, isEmergency = getBoolean("isEmergency") == true,
-            updatedAt = getLong("updatedAt") ?: 0L,
+            updatedAt = getLong("updatedAt") ?: 0L, onHome = getBoolean("onHome") != false, photoUrl = getString("photoUrl"),
         )
     }
 
@@ -442,7 +473,7 @@ class FamilyRepository(
         return Medicine(
             id = id, name = name, dose = getString("dose") ?: "", photoPath = keepPhoto,
             times = getString("times") ?: return null, active = getBoolean("active") != false,
-            updatedAt = getLong("updatedAt") ?: 0L,
+            updatedAt = getLong("updatedAt") ?: 0L, tone = getString("tone") ?: "", photoUrl = getString("photoUrl"),
         )
     }
 }

@@ -40,11 +40,16 @@ import com.lusanetech.warmhearth.ui.Palette
 import com.lusanetech.warmhearth.util.AlarmSound
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 import java.io.File
 
 /** Full-screen "Time for your medicine" with the pill's photo. Rings until answered (max 2 minutes). */
 class MedicineAlertActivity : ComponentActivity() {
     private lateinit var sound: AlarmSound
+    private var speaker: com.lusanetech.warmhearth.ai.Speaker? = null
+    @Volatile private var stopped = false
+
+    private fun silence() { stopped = true; sound.stop(); speaker?.stop() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,14 +58,26 @@ class MedicineAlertActivity : ComponentActivity() {
         val time = intent.getStringExtra(MedicineScheduler.EXTRA_TIME) ?: return finish()
         val slot = intent.getStringExtra(MedicineScheduler.EXTRA_SLOT) ?: return finish()
         NotificationManagerCompat.from(this).cancel(MedicineAlarmReceiver.notificationId(medId, time))
-        sound = AlarmSound(this).also { it.start() }
+        sound = AlarmSound(this)
+        // The reminder sound the family chose: alarm, a ringtone, or the medicine's name spoken aloud.
+        lifecycleScope.launch {
+            val med = graph.db.medicines().get(medId)
+            val tone = com.lusanetech.warmhearth.util.Tones.resolve(med?.tone ?: "", graph.prefs.current().medTone)
+            if (tone == com.lusanetech.warmhearth.util.Tones.VOICE && med != null) {
+                sound.vibrateOnly()
+                val name = graph.prefs.current().seniorName
+                val line = getString(R.string.med_voice_line, name, med.name, med.dose).trim()
+                speaker = com.lusanetech.warmhearth.ai.Speaker(this@MedicineAlertActivity, alarm = true)
+                repeat(12) { if (!isFinishing && !stopped) { speaker?.speak(line); delay(10_000) } }
+            } else if (!stopped) sound.start(tone.takeIf { it != com.lusanetech.warmhearth.util.Tones.ALARM })
+        }
 
         setContent {
             WarmHearthTheme(scale = 1.3f) {
                 var med by remember { mutableStateOf<Medicine?>(null) }
                 val scope = rememberCoroutineScope()
                 LaunchedEffect(Unit) { med = graph.db.medicines().get(medId) }
-                LaunchedEffect(Unit) { delay(120_000); sound.stop() }
+                LaunchedEffect(Unit) { delay(120_000); silence() }
 
                 Column(
                     Modifier.fillMaxSize().background(Palette.Background).padding(24.dp),
@@ -77,7 +94,7 @@ class MedicineAlertActivity : ComponentActivity() {
                     Text(med?.name ?: "", style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
                     med?.dose?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.headlineMedium) }
                     BigButton(stringResource(R.string.i_took_it), color = Palette.Green, icon = Icons.Filled.Check) {
-                        sound.stop()
+                        silence()
                         scope.launch {
                             graph.db.doseLogs().insert(DoseLog(medicineId = medId, slot = slot, takenAt = System.currentTimeMillis()))
                             graph.family.recordDose(medId, med?.name ?: "", slot, taken = true)
@@ -85,7 +102,7 @@ class MedicineAlertActivity : ComponentActivity() {
                         }
                     }
                     BigButton(stringResource(R.string.remind_10_min), color = Palette.Grey, icon = Icons.Filled.Snooze) {
-                        sound.stop()
+                        silence()
                         graph.scheduler.snooze(medId, time, slot)
                         finish()
                     }
@@ -95,7 +112,8 @@ class MedicineAlertActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        if (::sound.isInitialized) sound.stop()
+        if (::sound.isInitialized) silence()
+        speaker?.shutdown()
         super.onDestroy()
     }
 }

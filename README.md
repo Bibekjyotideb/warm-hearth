@@ -7,7 +7,8 @@ AI helpers (scam checker, "read it to me", medicine-box reader) and voice comman
 has a **family mode**: the son or daughter installs it too, links with an 8-letter code, and gets a
 dashboard per parent: daily "I'm OK" check-ins, safety alerts (phone on silent, battery low, offline,
 unused), ring the phone / turn the ringer back on, today's medicines, photos and notes for the parent's
-home screen, and remote control of contacts, medicines, text size and tiles. A scam call shield warns
+home screen, full remote control (contacts with photos and home-screen faces, medicine times and
+reminder sounds, text size, tiles, fall detection, PIN), and watch readings via Health Connect. A scam call shield warns
 about, silences or blocks calls from unknown numbers.
 
 Kotlin · Jetpack Compose · Material 3 · Room · Firebase (Auth, Firestore, Storage, Messaging, Functions, AI Logic, App Check, Remote Config, In-App Messaging) · WorkManager · Play Billing 8 · English + Hindi.
@@ -54,6 +55,7 @@ app/src/main/java/com/lusanetech/warmhearth/
   meds/                    alarms, full-screen reminder, medicine screens
   ai/                      Gemini calls + quota, scam checker, read-it-to-me, camera, voice, text-to-speech
   family/                  Firebase sync, pairing, family-mode app (dashboard, manage screens), push messages
+  health/                  Health Connect readings (watch / band), consent, sync
   safety/                  phone status reports, remote commands (ring / ringer on), "find my phone" alert
   billing/                 Play Billing + paywall
   settings/                PIN, settings, home-screen buttons

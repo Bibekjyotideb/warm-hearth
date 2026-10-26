@@ -144,6 +144,24 @@ function evaluate(device, state = {}, now = new Date()) {
     sent.silent = silentSince;
   }
 
+  // 6. Heart rate from their watch outside the range the family set. Off by default; informational,
+  //    not a medical alarm (Health Connect policy: not for life-critical use).
+  const v = device.vitals || {};
+  const vs = (device.settings && device.settings.vitals) || {};
+  const hrAt = ms(v.heartRateAt);
+  if (vs.hrAlerts === true && typeof v.heartRate === "number" && hrAt && t - hrAt < 2 * H && sent.hr !== hrAt) {
+    const hi = Number(vs.hrHigh) || 120, lo = Number(vs.hrLow) || 45;
+    if (v.heartRate > hi || v.heartRate < lo) {
+      const dir = v.heartRate > hi ? "above" : "below";
+      out.push({
+        type: "heart_rate",
+        message: `${name}'s watch measured a heart rate of ${v.heartRate} bpm, ${dir} the range you set (${lo}–${hi}). Watch readings can be wrong; check in with them. This is not a medical alarm.`,
+        message_hi: `${nameHi} की घड़ी ने धड़कन ${v.heartRate} bpm मापी, जो आपकी तय सीमा (${lo}–${hi}) से ${dir === "above" ? "ऊपर" : "नीचे"} है। घड़ी की रीडिंग ग़लत भी हो सकती है; एक बार हालचाल लें। यह मेडिकल अलार्म नहीं है।`,
+      });
+      sent.hr = hrAt;
+    }
+  }
+
   return { alerts: out, state: { sent } };
 }
 

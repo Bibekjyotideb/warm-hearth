@@ -166,6 +166,7 @@ fun ContactEditorDialog(
     var name by remember { mutableStateOf(initial.name) }
     var phone by remember { mutableStateOf(initial.phone) }
     var emergency by remember { mutableStateOf(initial.isEmergency) }
+    var onHome by remember { mutableStateOf(initial.onHome) }
     var photo by remember { mutableStateOf(initial.photoPath) }
 
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -200,13 +201,25 @@ fun ContactEditorDialog(
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.emergency_contact_toggle))
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = onHome, onCheckedChange = { onHome = it })
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.show_on_home))
+                }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = name.isNotBlank() && phone.any(Char::isDigit),
                 onClick = {
-                    onSave(initial.copy(name = name.trim(), phone = phone.trim(), isEmergency = emergency, photoPath = photo, updatedAt = System.currentTimeMillis()))
+                    onSave(
+                        initial.copy(
+                            name = name.trim(), phone = phone.trim(), isEmergency = emergency, onHome = onHome, photoPath = photo,
+                            // A photo picked on this phone replaces (and un-links) one the family uploaded.
+                            photoUrl = if (photo != initial.photoPath) null else initial.photoUrl,
+                            updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
                 },
             ) { Text(stringResource(R.string.save)) }
         },

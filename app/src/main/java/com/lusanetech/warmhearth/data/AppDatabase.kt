@@ -69,7 +69,7 @@ interface DoseLogDao {
     suspend fun insert(log: DoseLog)
 }
 
-@Database(entities = [FavoriteContact::class, Medicine::class, DoseLog::class], version = 1, exportSchema = false)
+@Database(entities = [FavoriteContact::class, Medicine::class, DoseLog::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun contacts(): ContactDao
     abstract fun medicines(): MedicineDao
@@ -77,6 +77,18 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         fun create(context: Context): AppDatabase =
-            Room.databaseBuilder(context, AppDatabase::class.java, "warmhearth.db").build()
+            Room.databaseBuilder(context, AppDatabase::class.java, "warmhearth.db")
+                .addMigrations(MIGRATION_1_2)
+                .build()
+
+        /** v1.2: show-on-home and family photos for contacts; reminder tone and family photos for medicines. */
+        private val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE contacts ADD COLUMN onHome INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE contacts ADD COLUMN photoUrl TEXT")
+                db.execSQL("ALTER TABLE medicines ADD COLUMN tone TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE medicines ADD COLUMN photoUrl TEXT")
+            }
+        }
     }
 }

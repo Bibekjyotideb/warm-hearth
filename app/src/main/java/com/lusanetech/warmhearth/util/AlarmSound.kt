@@ -16,14 +16,21 @@ class AlarmSound(private val context: Context) {
         if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator
         else @Suppress("DEPRECATION") context.getSystemService(Vibrator::class.java)
 
-    fun start() {
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+    /** [tone]: a ringtone URI chosen for this medicine, or null for the phone's alarm sound. */
+    fun start(tone: String? = null) {
+        val chosen = tone?.takeIf { it.startsWith("content://") || it.startsWith("android.resource://") }?.let { android.net.Uri.parse(it) }
+        val uri = chosen ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        ringtone = RingtoneManager.getRingtone(context, uri)?.apply {
+        ringtone = (RingtoneManager.getRingtone(context, uri) ?: RingtoneManager.getRingtone(context, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)))?.apply {
             audioAttributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build()
             if (Build.VERSION.SDK_INT >= 28) isLooping = true
             play()
         }
+        vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 500), 0))
+    }
+
+    /** Vibration only, for the spoken reminder (the voice plays on the alarm stream). */
+    fun vibrateOnly() {
         vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 800, 500), 0))
     }
 

@@ -17,6 +17,7 @@ const TYPES = {
   offline:     { free: false, title: "📵 Phone offline" },
   low_battery: { free: false, title: "🔋 Battery low", quiet: true },
   silent:      { free: false, title: "🔕 Phone on silent" },
+  heart_rate:  { free: false, title: "❤️ Heart rate reading", quiet: true },
 };
 
 exports.TYPES = TYPES;

@@ -167,9 +167,9 @@ fun HomeScreen(settings: Settings, onOpen: (Screen) -> Unit) {
                 NoteCard(note, sender, onCall = { calling = it })
             }
 
-            if (contacts.isNotEmpty()) {
+            if (contacts.any { it.onHome }) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    items(contacts.take(8), key = { it.id }) { c ->
+                    items(contacts.filter { it.onHome }.take(8), key = { it.id }) { c ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
@@ -219,7 +219,7 @@ fun HomeScreen(settings: Settings, onOpen: (Screen) -> Unit) {
             Modifier.fillMaxWidth().background(Palette.Background).padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (RemoteFlags.voiceEnabled) SpeakButton(Modifier.weight(0.42f), onClick = listen)
+            if (RemoteFlags.voiceEnabled && settings.voiceCommands) SpeakButton(Modifier.weight(0.42f), onClick = listen)
             SosBar(Modifier.weight(0.58f)) { onOpen(Screen.SOS) }
         }
     }

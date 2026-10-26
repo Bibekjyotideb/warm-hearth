@@ -104,3 +104,20 @@ test("bad time zone falls back safely", () => {
   d.status.tz = "Not/AZone";
   assert.doesNotThrow(() => evaluate(d, {}, NOW));
 });
+
+test("heart-rate alert only when the family turned it on, once per reading", () => {
+  const d = base({ vitals: { heartRate: 132, heartRateAt: NOW.getTime() - 10 * 60_000 } });
+  assert.deepEqual(types(evaluate(d, {}, NOW)), []);
+  d.settings = { vitals: { hrAlerts: true, hrHigh: 120, hrLow: 45 } };
+  const r = evaluate(d, {}, NOW);
+  assert.deepEqual(types(r), ["heart_rate"]);
+  assert.match(r.alerts[0].message, /not a medical alarm/);
+  assert.deepEqual(types(evaluate(d, r.state, NOW)), []);
+  d.vitals.heartRate = 80; d.vitals.heartRateAt = NOW.getTime();
+  assert.deepEqual(types(evaluate(d, r.state, NOW)), []);
+});
+
+test("old heart-rate readings are ignored", () => {
+  const d = base({ vitals: { heartRate: 30, heartRateAt: NOW.getTime() - 5 * H }, settings: { vitals: { hrAlerts: true } } });
+  assert.deepEqual(types(evaluate(d, {}, NOW)), []);
+});

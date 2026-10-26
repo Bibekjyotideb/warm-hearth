@@ -95,6 +95,10 @@ on every phone within about an hour, with no app update.
 | `notes_enabled` | true | Kill switch for photos & notes |
 | `call_shield_enabled` | true | Kill switch for the scam call shield UI (if a phone maker misbehaves) |
 | `remote_ring_enabled` | true | Hide "Ring phone" in the family app |
+| `vitals_enabled` | true | Kill switch for watch / health readings |
+| `shop_enabled` | true | Show "Which watch to buy?" in the family app |
+| `shop_json` | "" | Replace the device list without a release (same shape as `DEFAULT_SHOP` in `RemoteFlags.kt`; optional `url_in` / `url_intl` per item) |
+| `shop_disclosure_en` / `_hi` | "" | Override the affiliate disclosure line |
 
 **Real-time:** the app listens for Remote Config updates, so a published change reaches open apps in
 seconds, and everyone else on their next app start (at most an hour).
@@ -255,3 +259,25 @@ Add a teammate later the same way. Remove access with the Firebase Admin SDK or 
 | Real app icon + feature graphic + screenshots | To do (screen previews: `docs/app-preview.html`) |
 | GST registration check | Ask your CA whether you need GST registration for Play income and export of services |
 | Compile and test on real phones (Xiaomi, Samsung, Pixel) | To do |
+
+---
+
+## 9. Watches, Health Connect and referral income
+
+**Health Connect (vitals).** Google Fit's APIs shut down at the end of 2026; WarmHearth reads from
+Health Connect instead. In Play Console → App content, fill in the Health Connect declaration using
+`docs/DATA_SAFETY.md` (use case, one line per permission). Review takes a few days; until approved,
+keep `vitals_enabled = false` in Remote Config for production users.
+
+**Referral links.** The family app's "Which watch to buy?" opens `warmhearth.lusanetech.com/devices`,
+which holds the affiliate links and the disclosure (cleanest for Play policy and for the affiliate
+programme's rules).
+1. Apply to **Amazon Associates India** (affiliate-program.amazon.in) and, for other countries,
+   **Amazon Associates US**. They want a live website with content: `/devices` is that page.
+2. Put your tracking IDs in `web-src/build.py` → `SITE["amazon_tag_in"]` / `["amazon_tag_us"]`,
+   rebuild and deploy hosting. Links become `amazon.in/s?k=…&tag=yourtag-21`.
+3. Optional: Flipkart Affiliate or an aggregator (EarnKaro, Cuelinks) for more stores: change the
+   `href` pattern in `devices_html()`.
+4. Update the list any time in `web-src/data/devices.json` (website) and `shop_json` (app).
+Rules to keep: the list is the same for everyone and never based on health data (Health Connect
+policy), every page with links shows the disclosure, links say "(affiliate link)".

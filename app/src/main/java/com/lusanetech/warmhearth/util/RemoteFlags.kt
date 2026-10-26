@@ -53,6 +53,11 @@ object RemoteFlags {
         "paywall_default_plan" to "yearly",   // yearly | monthly
         "default_tiles" to "",                // comma list for new installs, e.g. "phone,contacts,whatsapp,…"
         "help_faq_json" to "",                // [{"q_en":"…","a_en":"…","q_hi":"…","a_hi":"…"}]
+        "vitals_enabled" to true,             // watch / band readings (Health Connect)
+        "shop_enabled" to true,               // "Which watch to buy?" in the family app
+        "shop_json" to "",                    // replaces the built-in device list (same shape as DEFAULT_SHOP)
+        "shop_disclosure_en" to "",
+        "shop_disclosure_hi" to "",
     )
 
     fun init() {
@@ -95,6 +100,51 @@ object RemoteFlags {
 
     /** Tiles for a brand-new install, or null to use the built-in default. */
     fun defaultTiles(): List<String>? = s("default_tiles").split(",").map { it.trim() }.filter { it.isNotBlank() }.takeIf { it.size >= 2 }
+
+    val shopEnabled get() = b("shop_enabled")
+    val vitalsEnabled get() = b("vitals_enabled")
+    fun shopDisclosure(hindi: Boolean) = lang("shop_disclosure", hindi)
+
+    /**
+     * Watches and bands that write to Health Connect, for the family app's "Which watch to buy?".
+     * Same list for everyone (never chosen from anyone's health data: Health Connect policy).
+     * Links go to warmhearth.lusanetech.com/devices, which carries the affiliate links and the
+     * disclosure; replace the whole list from Remote Config (shop_json) without a release.
+     * features: steps, hr, spo2, sleep, bp, fall, sos
+     */
+    data class ShopItem(
+        val id: String, val name: String, val tier: String, val features: List<String>,
+        val app: String, val note: String, val urlIn: String, val urlIntl: String,
+    )
+
+    private const val SITE_DEVICES = "https://warmhearth.lusanetech.com/devices"
+    private val DEFAULT_SHOP = """[
+      {"id":"xiaomi-band","name":"Xiaomi Smart Band","tier":"budget","features":["steps","hr","sleep"],"app":"Mi Fitness","note":"Light, long battery life. Simple to wear all day."},
+      {"id":"amazfit-band","name":"Amazfit Band / Bip","tier":"budget","features":["steps","hr","spo2","sleep"],"app":"Zepp","note":"Big screen for the price; turn on Health Connect in the Zepp app."},
+      {"id":"fitbit-charge","name":"Fitbit Charge","tier":"mid","features":["steps","hr","spo2","sleep"],"app":"Fitbit","note":"Comfortable band with clear sleep tracking."},
+      {"id":"amazfit-active","name":"Amazfit Active / GTS","tier":"mid","features":["steps","hr","spo2","sleep"],"app":"Zepp","note":"Watch-style screen, easier to read than a band."},
+      {"id":"galaxy-watch","name":"Samsung Galaxy Watch","tier":"premium","features":["steps","hr","spo2","sleep","fall","sos"],"app":"Samsung Health","note":"Detects hard falls and can call for help. Best with a Samsung phone."},
+      {"id":"pixel-watch","name":"Google Pixel Watch","tier":"premium","features":["steps","hr","spo2","sleep","fall","sos"],"app":"Fitbit","note":"Detects hard falls and can call for help. Works with most Android phones."}
+    ]"""
+
+    fun shop(): List<ShopItem> {
+        fun parse(json: String) = runCatching {
+            val arr = JSONArray(json)
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                val id = o.getString("id")
+                val f = o.optJSONArray("features")
+                ShopItem(
+                    id = id, name = o.getString("name"), tier = o.optString("tier", "mid"),
+                    features = if (f == null) emptyList() else (0 until f.length()).map { f.getString(it) },
+                    app = o.optString("app"), note = o.optString("note"),
+                    urlIn = o.optString("url_in").ifBlank { "$SITE_DEVICES#$id" },
+                    urlIntl = o.optString("url_intl").ifBlank { "$SITE_DEVICES#$id" },
+                )
+            }
+        }.getOrNull()
+        return s("shop_json").takeIf { it.isNotBlank() }?.let(::parse) ?: parse(DEFAULT_SHOP).orEmpty()
+    }
 
     data class Faq(val q: String, val a: String)
 

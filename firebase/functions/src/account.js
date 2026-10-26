@@ -42,6 +42,7 @@ exports.deleteMyAccount = onCall({ region: cfg.REGION, secrets: SMTP_SECRETS }, 
     await db.doc(`deviceTokens/${d.id}`).delete().catch(() => null);
     await db.doc(`alertState/${d.id}`).delete().catch(() => null);
     await admin.storage().bucket().deleteFiles({ prefix: `notes/${d.id}/` }).catch(() => null);
+    await admin.storage().bucket().deleteFiles({ prefix: `media/${d.id}/` }).catch(() => null);
   }
 
   const tickets = await db.collection("tickets").where("uid", "==", uid).get();

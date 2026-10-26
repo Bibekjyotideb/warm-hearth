@@ -15,8 +15,8 @@ android {
         applicationId = "com.lusanetech.warmhearth"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
     }
 
     buildTypes {
@@ -57,6 +57,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.9.2")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation("androidx.work:work-runtime-ktx:2.10.2")        // phone status for family safety alerts
+    implementation("androidx.health.connect:connect-client:1.1.0")  // watch / band readings (replaces Google Fit)
 
     implementation("androidx.room:room-runtime:2.7.2")
     implementation("androidx.room:room-ktx:2.7.2")

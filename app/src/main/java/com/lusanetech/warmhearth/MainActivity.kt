@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import com.lusanetech.warmhearth.ai.ReadItScreen
 import com.lusanetech.warmhearth.ai.ScamCheckScreen
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -76,6 +77,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         updates?.check() // forced / background updates via Play (see util/AppUpdates.kt)
+        // Watch readings: read while on screen (works even where background reads aren't allowed).
+        com.lusanetech.warmhearth.health.HealthVitals.foreground = true
+        graph.scope.launch { runCatching { com.lusanetech.warmhearth.health.HealthVitals.sync(this@MainActivity) } }
+    }
+
+    override fun onPause() {
+        com.lusanetech.warmhearth.health.HealthVitals.foreground = false
+        super.onPause()
     }
 
     override fun onDestroy() {

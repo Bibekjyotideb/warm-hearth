@@ -9,7 +9,8 @@ import androidx.compose.ui.platform.LocalContext
 import java.util.Locale
 
 /** Reads answers aloud in the phone's language (Hindi voices ship with most Android phones in India). */
-class Speaker(context: Context) {
+/** [alarm]: speak on the alarm stream, so a reminder is heard even when media volume is low. */
+class Speaker(context: Context, private val alarm: Boolean = false) {
     private var ready = false
     private var pending: String? = null
     private lateinit var tts: TextToSpeech
@@ -20,6 +21,10 @@ class Speaker(context: Context) {
             if (ready) {
                 tts.language = Locale.getDefault()
                 tts.setSpeechRate(0.85f) // a little slower than default
+                if (alarm) tts.setAudioAttributes(
+                    android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH).build(),
+                )
                 pending?.let { speak(it) }
                 pending = null
             }

@@ -24,6 +24,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PersonalInjury
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Bedtime
@@ -65,14 +71,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lusanetech.warmhearth.R
-import com.lusanetech.warmhearth.calls.ContactEditorDialog
 import com.lusanetech.warmhearth.data.CallShieldMode
 import com.lusanetech.warmhearth.data.FavoriteContact
 import com.lusanetech.warmhearth.data.Medicine
 import com.lusanetech.warmhearth.data.Tiles
 import com.lusanetech.warmhearth.graph
-import com.lusanetech.warmhearth.meds.MedicineEditorDialog
-import com.lusanetech.warmhearth.meds.MedicineList
 import com.lusanetech.warmhearth.ui.BigButton
 import com.lusanetech.warmhearth.ui.Chip
 import com.lusanetech.warmhearth.ui.IconBadge
@@ -115,55 +118,88 @@ private fun rememberSettingsSaver(d: DeviceState): Pair<String?, (DeviceSettings
 
 @Composable
 fun RemotePeopleScreen(d: DeviceState, onBack: () -> Unit, onPaywall: () -> Unit) {
-    val family = LocalContext.current.graph.family
-    val contacts by remember(d.id) { family.observeContacts(d.id) }.collectAsState(initial = emptyList())
-    var edit by remember { mutableStateOf<FavoriteContact?>(null) }
+    val graph = LocalContext.current.graph
+    val contacts by remember(d.id) { graph.family.observeContacts(d.id) }.collectAsState(initial = emptyList())
+    var edit by remember { mutableStateOf<Pair<FavoriteContact, Boolean>?>(null) }
+    edit?.let { (c, isNew) -> RemoteContactEditor(d, c, isNew, onDone = { edit = null }); return }
+
     Page(stringResource(R.string.tab_people), onBack = onBack) {
         PremiumGate(d, onPaywall)
         BigButton(stringResource(R.string.add_new_person), icon = Icons.Filled.PersonAdd, color = Palette.Blue, enabled = d.premium) {
-            edit = FavoriteContact(id = UUID.randomUUID().toString(), name = "", phone = "", position = contacts.size, isEmergency = contacts.none { it.isEmergency })
+            edit = FavoriteContact(id = UUID.randomUUID().toString(), name = "", phone = "", position = contacts.size, isEmergency = contacts.none { it.isEmergency }) to true
         }
         Spacer(Modifier.height(10.dp))
-        Text(stringResource(R.string.people_photo_hint), style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft)
+        Text(stringResource(R.string.people_order_hint), style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft)
         Spacer(Modifier.height(8.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(contacts, key = { it.id }) { c ->
+            items(contacts.size, key = { contacts[it].id }) { i ->
+                val c = contacts[i]
                 Row(
                     Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(Palette.Surface)
-                        .clickable(enabled = d.premium) { edit = c }.padding(12.dp),
+                        .clickable(enabled = d.premium) { edit = c to false }.padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconBadge(Icons.Filled.Phone, if (c.isEmergency) Tone.Red else Tone.Blue, size = 40.dp)
+                    RemotePhoto(c.name, c.photoUrl, null, 48.dp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(c.name, style = MaterialTheme.typography.titleMedium)
-                        Text(c.phone + if (c.isEmergency) " · " + stringResource(R.string.emergency_contact) else "", style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+                        Text(c.phone, style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                            if (c.onHome) Chip(stringResource(R.string.on_home), Tone.Teal)
+                            if (c.isEmergency) Chip("SOS", Tone.Red)
+                        }
                     }
-                    if (d.premium) IconButton(onClick = { family.remoteDeleteContact(d.id, c.id) }) {
-                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = Palette.Red)
+                    if (d.premium) Column {
+                        IconButton(enabled = i > 0, onClick = {
+                            graph.remote.reorderContacts(d.id, contacts.toMutableList().apply { add(i - 1, removeAt(i)) })
+                        }) { Icon(Icons.Filled.KeyboardArrowUp, stringResource(R.string.move_up)) }
+                        IconButton(enabled = i < contacts.lastIndex, onClick = {
+                            graph.remote.reorderContacts(d.id, contacts.toMutableList().apply { add(i + 1, removeAt(i)) })
+                        }) { Icon(Icons.Filled.KeyboardArrowDown, stringResource(R.string.move_down)) }
                     }
                 }
             }
         }
     }
-    // Photos of people are added on the parent's phone itself (they never leave it).
-    edit?.let { c -> ContactEditorDialog(c, allowPhoto = false, onDismiss = { edit = null }) { family.remoteSaveContact(d.id, it); edit = null } }
 }
 
 @Composable
 fun RemoteMedicinesScreen(d: DeviceState, onBack: () -> Unit, onPaywall: () -> Unit) {
     val family = LocalContext.current.graph.family
     val meds by remember(d.id) { family.observeMedicines(d.id) }.collectAsState(initial = emptyList())
-    var edit by remember { mutableStateOf<Medicine?>(null) }
+    var edit by remember { mutableStateOf<Pair<Medicine, Boolean>?>(null) }
+    edit?.let { (m, isNew) -> RemoteMedicineEditor(d, m, isNew, onDone = { edit = null }); return }
+
     Page(stringResource(R.string.tab_medicines), onBack = onBack) {
         PremiumGate(d, onPaywall)
         BigButton(stringResource(R.string.add_medicine), icon = Icons.Filled.Add, color = Palette.Orange, enabled = d.premium) {
-            edit = Medicine(id = UUID.randomUUID().toString(), name = "", times = "08:00")
+            edit = Medicine(id = UUID.randomUUID().toString(), name = "", times = "08:00") to true
         }
         Spacer(Modifier.height(10.dp))
-        MedicineList(meds, onEdit = { if (d.premium) edit = it }, onDelete = { if (d.premium) family.remoteDeleteMedicine(d.id, it.id) })
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(meds, key = { it.id }) { m ->
+                Row(
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(Palette.Surface)
+                        .clickable(enabled = d.premium) { edit = m to false }.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (m.photoUrl != null) {
+                        AsyncImage(m.photoUrl, null, contentScale = ContentScale.Crop, modifier = Modifier.size(48.dp).clip(MaterialTheme.shapes.small))
+                    } else IconBadge(Icons.Filled.Medication, Tone.Orange, size = 48.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(m.name + if (m.dose.isNotBlank()) " · ${m.dose}" else "", style = MaterialTheme.typography.titleMedium)
+                        Text(m.timeList().joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium, color = Palette.InkSoft)
+                        Text(
+                            com.lusanetech.warmhearth.util.toneLabel(m.tone, d.status?.tones.orEmpty()),
+                            style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft,
+                        )
+                    }
+                    if (!m.active) Chip(stringResource(R.string.paused), Tone.Grey)
+                }
+            }
+        }
     }
-    edit?.let { m -> MedicineEditorDialog(m, allowPhoto = false, onDismiss = { edit = null }) { family.remoteSaveMedicine(d.id, it); edit = null } }
 }
 
 // ---------------------------------------------------------------- home screen & text size
@@ -198,6 +234,43 @@ fun HomeSetupScreen(d: DeviceState, onBack: () -> Unit, onPaywall: () -> Unit) {
                     }
                 }
             }
+            // The rest of the phone's settings, from here.
+            var changingPin by remember { mutableStateOf(false) }
+            SectionCard(padding = 8.dp) {
+                Text(stringResource(R.string.phone_settings), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(8.dp))
+                SwitchRow(stringResource(R.string.fall_detection), stringResource(R.string.fall_detection_remote_sub), Icons.Filled.PersonalInjury, Tone.Red,
+                    s.fallDetection ?: d.status?.fallDetectionOn ?: false) { if (d.premium) save(s.copy(fallDetection = it)) else onPaywall() }
+                SwitchRow(stringResource(R.string.voice_commands), stringResource(R.string.voice_commands_sub), Icons.Filled.Mic, Tone.Ember,
+                    s.voiceCommands) { if (d.premium) save(s.copy(voiceCommands = it)) else onPaywall() }
+                Column(Modifier.padding(horizontal = 4.dp)) {
+                    com.lusanetech.warmhearth.util.TonePicker(s.medTone, d.status?.tones.orEmpty(), includeDefault = false, enabled = true) {
+                        if (d.premium) save(s.copy(medTone = it)) else onPaywall()
+                    }
+                }
+                NavRow(stringResource(R.string.change_pin), Icons.Filled.Lock, Tone.Grey, subtitle = stringResource(R.string.change_pin_remote_sub)) {
+                    if (d.premium) changingPin = true else onPaywall()
+                }
+            }
+            if (changingPin) {
+                var pin by remember { mutableStateOf("") }
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { changingPin = false },
+                    title = { Text(stringResource(R.string.change_pin)) },
+                    text = {
+                        OutlinedTextField(
+                            pin, { v -> pin = v.filter(Char::isDigit).take(6) }, label = { Text(stringResource(R.string.pin_label)) }, singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
+                        )
+                    },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(enabled = pin.length >= 4, onClick = { save(s.copy(pin = pin)); changingPin = false }) {
+                            Text(stringResource(R.string.save))
+                        }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { changingPin = false }) { Text(stringResource(R.string.cancel)) } },
+                )
+            }
+
             SectionCard(padding = 8.dp) {
                 Text(stringResource(R.string.home_tiles), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(8.dp))
                 builtIn.forEach { (key, label) -> CheckRow(stringResource(label), key in tiles) { toggle(key, it) } }

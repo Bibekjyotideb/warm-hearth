@@ -154,3 +154,23 @@
   });
   render();
 })();
+
+// /devices: Amazon.in and ₹ ranges for visitors in India, Amazon.com and $ elsewhere; price filter.
+(() => {
+  const list = document.querySelector(".devices");
+  if (!list) return;
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  const india = /Asia\/(Kolkata|Calcutta)/.test(tz) || /-IN$|^hi\b/.test(navigator.language || "");
+  const key = india ? "in" : "intl";
+  document.querySelectorAll(".devices [data-in], .tier-filter [data-in]").forEach((el) => {
+    const v = el.dataset[key];
+    if (el.tagName === "A") el.href = v; else el.textContent = v;
+  });
+  const filter = document.querySelector(".tier-filter");
+  filter.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    filter.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    list.querySelectorAll(".device").forEach((d) => { d.hidden = b.dataset.tier !== "all" && d.dataset.tier !== b.dataset.tier; });
+  });
+})();

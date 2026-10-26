@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Medication
@@ -227,6 +229,7 @@ fun DeviceDashboard(d: DeviceState, showBack: Boolean, onBack: () -> Unit, go: (
             toast?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = Palette.Brand, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 4.dp)) }
 
             TodayMedicines(d, doses, meds.isEmpty(), onManage = { go(FamilyRoute.Medicines(d.id)) }, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
+            if (RemoteFlags.vitalsEnabled) VitalsCard(d, onOpen = { go(FamilyRoute.Vitals(d.id)) }, onShop = { go(FamilyRoute.Devices(d.id)) }, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
             Activity(events)
 
             SectionCard(padding = 8.dp) {
@@ -239,6 +242,8 @@ fun DeviceDashboard(d: DeviceState, showBack: Boolean, onBack: () -> Unit, go: (
                     stringResource(R.string.call_shield), Icons.Filled.Shield, Tone.Brand,
                     subtitle = shieldSubtitle(context, d),
                 ) { go(FamilyRoute.Shield(d.id)) }
+                if (RemoteFlags.vitalsEnabled) NavRow(stringResource(R.string.vitals_title), Icons.Filled.Favorite, Tone.Red, subtitle = stringResource(R.string.vitals_row_sub)) { go(FamilyRoute.Vitals(d.id)) }
+                if (RemoteFlags.shopEnabled) NavRow(stringResource(R.string.which_watch), Icons.Filled.Watch, Tone.Grey, subtitle = stringResource(R.string.which_watch_sub)) { go(FamilyRoute.Devices(d.id)) }
                 if (RemoteFlags.notesEnabled) NavRow(stringResource(R.string.photos_notes), Icons.Filled.AddAPhoto, Tone.Pink, subtitle = stringResource(R.string.photos_notes_sub)) { go(FamilyRoute.Notes(d.id)) }
             }
 
@@ -396,6 +401,7 @@ private fun Activity(events: List<RemoteEvent>) {
                 "missed_dose" -> Icons.Filled.Medication to Tone.Orange
                 "silent" -> Icons.Filled.NotificationsOff to Tone.Orange
                 "low_battery" -> Icons.Filled.BatteryAlert to Tone.Orange
+                "heart_rate" -> Icons.Filled.Favorite to Tone.Red
                 else -> Icons.Filled.ErrorOutline to Tone.Orange
             }
             Row(

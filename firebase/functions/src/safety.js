@@ -4,9 +4,10 @@
 //                   Server-side on purpose: a phone that died can't report that it died.
 //   sendCommand     family taps "Ring her phone" / "Turn ringer on": push a data message to the senior phone.
 //   onNoteDeleted   a photo note expired (TTL) or was deleted: remove the photo from Storage.
+//   cleanupMedia*   a contact / medicine photo was replaced or removed: delete the old files.
 
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentDeleted, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const cfg = require("./config");
 const { evaluate } = require("./safetyRules");
@@ -70,3 +71,23 @@ exports.onNoteDeleted = onDocumentDeleted({ document: "devices/{deviceId}/notes/
     await admin.storage().bucket().file(path).delete({ ignoreNotFound: true });
   }
 });
+
+// Family-uploaded photos live at media/{deviceId}/{kind}/{id}-{time}.jpg. Keep only the one the
+// document points to; delete the rest (replaced photos, removed photos, deleted contacts).
+async function cleanupMedia(event, kind) {
+  const after = event.data && event.data.after && event.data.after.exists ? event.data.after.data() : null;
+  const before = event.data && event.data.before && event.data.before.exists ? event.data.before.data() : null;
+  const keepUrl = after && !after.deleted ? after.photoUrl || null : null;
+  const prevUrl = (before && !before.deleted && before.photoUrl) || null;
+  if (prevUrl === keepUrl) return; // photo unchanged (most writes)
+  const prefix = `media/${event.params.deviceId}/${kind}/${event.params.id}-`;
+  const [files] = await admin.storage().bucket().getFiles({ prefix });
+  await Promise.all(files
+    .filter((f) => !keepUrl || !keepUrl.includes(encodeURIComponent(f.name)))
+    .map((f) => f.delete({ ignoreNotFound: true })));
+}
+
+exports.cleanupMediaContacts = onDocumentWritten({ document: "devices/{deviceId}/contacts/{id}", region: cfg.REGION },
+  (e) => cleanupMedia(e, "contacts"));
+exports.cleanupMediaMedicines = onDocumentWritten({ document: "devices/{deviceId}/medicines/{id}", region: cfg.REGION },
+  (e) => cleanupMedia(e, "medicines"));

@@ -28,6 +28,21 @@ object PhotoStore {
         }.getOrNull()
     }
 
+    /** A photo the family added from their phone: download once, keep a small local copy. */
+    suspend fun download(context: Context, url: String, id: String): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val conn = java.net.URL(url).openConnection().apply { connectTimeout = 15_000; readTimeout = 30_000 }
+            val bytes = conn.getInputStream().use { it.readBytes() }
+            val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@runCatching null
+            val scale = 512f / maxOf(bmp.width, bmp.height)
+            val out = if (scale < 1f) Bitmap.createScaledBitmap(bmp, (bmp.width * scale).toInt(), (bmp.height * scale).toInt(), true) else bmp
+            val dir = File(context.filesDir, "photos").apply { mkdirs() }
+            val file = File(dir, "$id-${System.currentTimeMillis()}.jpg")
+            FileOutputStream(file).use { out.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+            file.absolutePath
+        }.getOrNull()
+    }
+
     suspend fun saveBitmap(context: Context, bitmap: Bitmap, id: String): String? = withContext(Dispatchers.IO) {
         runCatching {
             val dir = File(context.filesDir, "photos").apply { mkdirs() }

@@ -50,6 +50,12 @@ data class Settings(
     val lastCheckInDay: String,
     /** updatedAt of the last settings document applied from the family, to avoid loops. */
     val settingsAppliedAt: Long,
+    /** The Speak button (voice commands) on the home screen. */
+    val voiceCommands: Boolean,
+    /** Default medicine reminder sound: "alarm", "voice" (speaks the medicine) or a ringtone URI. */
+    val medTone: String,
+    /** The senior agreed to share watch / band readings (Health Connect) with linked family. */
+    val vitalsShared: Boolean,
 )
 
 object CallShieldMode {
@@ -75,6 +81,9 @@ class Prefs(private val context: Context) {
         val CHECKIN = booleanPreferencesKey("checkin_enabled")
         val CHECKIN_DAY = stringPreferencesKey("checkin_day")
         val APPLIED = longPreferencesKey("settings_applied_at")
+        val VOICE = booleanPreferencesKey("voice_commands")
+        val MED_TONE = stringPreferencesKey("med_tone")
+        val VITALS = booleanPreferencesKey("vitals_shared")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { it.toSettings() }
@@ -96,6 +105,9 @@ class Prefs(private val context: Context) {
         checkInEnabled = this[K.CHECKIN] ?: true,
         lastCheckInDay = this[K.CHECKIN_DAY] ?: "",
         settingsAppliedAt = this[K.APPLIED] ?: 0L,
+        voiceCommands = this[K.VOICE] ?: true,
+        medTone = this[K.MED_TONE] ?: "alarm",
+        vitalsShared = this[K.VITALS] ?: false,
     )
 
     /** Stable random id for this phone, created once. Used as the Firestore device document id. */
@@ -118,14 +130,25 @@ class Prefs(private val context: Context) {
     suspend fun setCheckInEnabled(value: Boolean) = context.dataStore.edit { it[K.CHECKIN] = value }
     suspend fun setLastCheckInDay(day: String) = context.dataStore.edit { it[K.CHECKIN_DAY] = day }
 
-    /** Applies settings the family changed remotely, in one write. */
-    suspend fun applyRemote(textScale: Float?, tiles: List<String>?, callShield: String?, checkIn: Boolean?, updatedAt: Long) =
+    suspend fun setVoiceCommands(value: Boolean) = context.dataStore.edit { it[K.VOICE] = value }
+    suspend fun setMedTone(value: String) = context.dataStore.edit { it[K.MED_TONE] = value }
+    suspend fun setVitalsShared(value: Boolean) = context.dataStore.edit { it[K.VITALS] = value }
+
+    /** Marks local changes as the newest, so their echo from Firestore isn't re-applied. */
+    suspend fun markApplied(updatedAt: Long) = context.dataStore.edit { it[K.APPLIED] = updatedAt }
+
+    /** Applies settings the family changed remotely, in one write. Null fields are left as they are. */
+    suspend fun applyRemote(r: com.lusanetech.warmhearth.family.DeviceSettings) =
         context.dataStore.edit { p ->
-            textScale?.let { p[K.FONT] = it }
-            tiles?.let { p[K.TILES] = it.joinToString(",") }
-            callShield?.takeIf { it in CallShieldMode.ALL }?.let { p[K.SHIELD] = it }
-            checkIn?.let { p[K.CHECKIN] = it }
-            p[K.APPLIED] = updatedAt
+            r.textScale?.let { p[K.FONT] = it }
+            r.tiles?.let { p[K.TILES] = it.joinToString(",") }
+            r.callShield.takeIf { it in CallShieldMode.ALL }?.let { p[K.SHIELD] = it }
+            p[K.CHECKIN] = r.checkInEnabled
+            r.fallDetection?.let { p[K.FALL] = it }
+            p[K.VOICE] = r.voiceCommands
+            r.medTone.takeIf { it.isNotBlank() }?.let { p[K.MED_TONE] = it }
+            r.pin?.takeIf { it.length in 4..6 && it.all(Char::isDigit) }?.let { p[K.PIN] = it }
+            p[K.APPLIED] = r.updatedAt
         }
 
     /** Used by "Delete this phone's data": back to a fresh install (a new device id is created). */

@@ -56,7 +56,8 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • Ring their phone loudly, even on silent, or turn their ringer back on from yours
 • See today's medicines: taken or missed, in their time zone
 • Send photos and notes that appear big on their home screen
-• Change contacts, medicine times, text size and home-screen buttons from anywhere
+• Control their phone from yours: add and edit contacts with photos, choose whose faces show on the home screen, medicine times and reminder sounds (even a spoken reminder), text size, buttons, fall detection and the PIN
+• Health readings from their watch or band through Health Connect: heart rate, steps, sleep, blood oxygen, blood pressure (Samsung Health, Fitbit, Mi Fitness, Zepp)
 • Brothers and sisters can link too
 
 ★ FREE, WITH PREMIUM WHEN YOU NEED IT

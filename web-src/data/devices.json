@@ -1,0 +1,14 @@
+[
+  {"id": "xiaomi-band", "name": "Xiaomi Smart Band", "tier": "budget", "features": ["Steps", "Heart rate", "Sleep"], "app": "Mi Fitness",
+   "note": "Light, with a long battery life. Easy to wear all day and night.", "search": "Xiaomi Smart Band"},
+  {"id": "amazfit-band", "name": "Amazfit Band / Bip", "tier": "budget", "features": ["Steps", "Heart rate", "Blood oxygen", "Sleep"], "app": "Zepp",
+   "note": "A bigger screen for the price. Turn on Health Connect inside the Zepp app.", "search": "Amazfit Bip"},
+  {"id": "fitbit-charge", "name": "Fitbit Charge", "tier": "mid", "features": ["Steps", "Heart rate", "Blood oxygen", "Sleep"], "app": "Fitbit",
+   "note": "Comfortable band with clear sleep tracking.", "search": "Fitbit Charge"},
+  {"id": "amazfit-active", "name": "Amazfit Active / GTS", "tier": "mid", "features": ["Steps", "Heart rate", "Blood oxygen", "Sleep"], "app": "Zepp",
+   "note": "Watch-style screen that's easier to read than a band.", "search": "Amazfit Active"},
+  {"id": "galaxy-watch", "name": "Samsung Galaxy Watch", "tier": "premium", "features": ["Steps", "Heart rate", "Blood oxygen", "Sleep", "Fall detection", "SOS call"], "app": "Samsung Health",
+   "note": "Detects hard falls and can call for help on its own. Best with a Samsung phone.", "search": "Samsung Galaxy Watch"},
+  {"id": "pixel-watch", "name": "Google Pixel Watch", "tier": "premium", "features": ["Steps", "Heart rate", "Blood oxygen", "Sleep", "Fall detection", "SOS call"], "app": "Fitbit",
+   "note": "Detects hard falls and can call for help on its own. Works with most Android phones.", "search": "Google Pixel Watch"}
+]

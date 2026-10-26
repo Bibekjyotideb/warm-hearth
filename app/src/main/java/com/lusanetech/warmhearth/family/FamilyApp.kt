@@ -73,6 +73,8 @@ sealed interface FamilyRoute {
     data class Shield(val id: String) : FamilyRoute
     data class Notes(val id: String) : FamilyRoute
     data class Paywall(val id: String) : FamilyRoute
+    data class Vitals(val id: String) : FamilyRoute
+    data class Devices(val id: String) : FamilyRoute
 }
 
 /**
@@ -135,6 +137,8 @@ fun FamilyApp() {
             is FamilyRoute.Shield -> FamilyRoute.Dashboard(r.id)
             is FamilyRoute.Notes -> FamilyRoute.Dashboard(r.id)
             is FamilyRoute.Paywall -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Vitals -> FamilyRoute.Dashboard(r.id)
+            is FamilyRoute.Devices -> FamilyRoute.Dashboard(r.id)
         }
     }
     BackHandler(enabled = route != FamilyRoute.Home, onBack = up)
@@ -146,11 +150,12 @@ fun FamilyApp() {
         FamilyRoute.Home -> FamilyHome(devices, onOpen = { go(FamilyRoute.Dashboard(it)) }, onSupport = { go(FamilyRoute.Support) }, onSignedOut = { signedIn = false })
         FamilyRoute.Support -> com.lusanetech.warmhearth.support.SupportScreen(onBack = up)
         is FamilyRoute.Paywall -> PaywallScreen(onBack = up, forDeviceId = r.id)
+        is FamilyRoute.Devices -> DevicesScreen(onBack = up)
         else -> {
             val id = when (r) {
                 is FamilyRoute.Dashboard -> r.id; is FamilyRoute.People -> r.id; is FamilyRoute.Medicines -> r.id
                 is FamilyRoute.HomeSetup -> r.id; is FamilyRoute.Safety -> r.id; is FamilyRoute.Shield -> r.id
-                is FamilyRoute.Notes -> r.id; else -> ""
+                is FamilyRoute.Notes -> r.id; is FamilyRoute.Vitals -> r.id; else -> ""
             }
             val d = device(id)
             if (d == null) {
@@ -166,6 +171,7 @@ fun FamilyApp() {
                 is FamilyRoute.Safety -> SafetySettingsScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
                 is FamilyRoute.Shield -> CallShieldSettingsScreen(d, onBack = up, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
                 is FamilyRoute.Notes -> NotesScreen(d, onBack = up)
+                is FamilyRoute.Vitals -> VitalsScreen(d, onBack = up, onShop = { go(FamilyRoute.Devices(d.id)) }, onPaywall = { go(FamilyRoute.Paywall(d.id)) })
                 else -> Unit
             }
         }

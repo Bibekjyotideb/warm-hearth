@@ -70,6 +70,11 @@ service cloud.firestore {
         allow read: if isOwner(deviceId) || isFamily(deviceId);
         allow write: if isOwner(deviceId);
       }
+      // One summary per day from the senior's watch / band (Health Connect), shared only after consent.
+      match /vitals/{day} {
+        allow read: if isOwner(deviceId) || isFamily(deviceId);
+        allow write: if isOwner(deviceId);
+      }
       // Photos and short notes from family, shown on the senior's home screen. Free on every plan.
       match /notes/{id} {
         allow read: if isOwner(deviceId) || isFamily(deviceId);

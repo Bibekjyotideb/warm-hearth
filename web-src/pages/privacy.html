@@ -5,7 +5,7 @@
 
 <p>WarmHearth ("the app") is made by {{company}}, a sole proprietorship owned by {{owner}}, {{address}} ("we", "us"). This policy explains what personal data the app and this website handle, why, and the choices you have. It applies to everyone who uses WarmHearth: the senior whose phone runs it, and family members who link their phones.</p>
 
-<div class="callout"><strong>In short:</strong> we collect only what the features need. Photos of people and pills stay on the senior's phone. Linked family see how the phone is (battery, ringer, last used), never what's on it. Location is shared only with linked family, only during SOS or a detected fall. We never sell data and the app has no ads.</div>
+<div class="callout"><strong>In short:</strong> we collect only what the features need. Photos taken on the senior's phone stay there. Health readings are shared only if the senior agrees, and never used for ads. Linked family see how the phone is (battery, ringer, last used), never what's on it. Location is shared only with linked family, only during SOS or a detected fall. We never sell data and the app has no ads.</div>
 
 <h2>1. What we collect and why</h2>
 <table>
@@ -13,12 +13,14 @@
 <tbody>
 <tr><td>A random device ID, app version, phone model, language</td><td>Senior's phone</td><td>To run the app, link family, fix bugs, count active phones</td><td>Our cloud database</td></tr>
 <tr><td>Names and phone numbers of contacts you add</td><td>People the senior calls</td><td>Photo contacts, SOS calls, family editing</td><td>On the phone; synced to our database so linked family can edit</td></tr>
-<tr><td>Contact and medicine photos</td><td>Senior</td><td>Show faces and pill photos</td><td><strong>Only on the phone.</strong> Never uploaded.</td></tr>
+<tr><td>Contact and medicine photos taken on the senior's phone</td><td>Senior</td><td>Show faces and pill photos</td><td><strong>Only on the phone.</strong> Never uploaded.</td></tr>
 <tr><td>Medicine names, doses and times; whether each dose was taken or missed</td><td>Senior</td><td>Reminders, missed-dose alerts, and "today's medicines" on the family's phone</td><td>Synced to our database for linked family; dose records deleted after 90 days</td></tr>
 <tr><td>Phone status: battery level, charging, ringer mode and volume, Do Not Disturb, network type (Wi-Fi / mobile), time zone, when the phone was last used, number of unknown calls screened today</td><td>Senior</td><td>Safety alerts for family (phone on silent, battery low, offline, not used) and the family dashboard</td><td>Our cloud database, overwritten every ~30 minutes. <strong>No messages, call history, browsing or app usage.</strong></td></tr>
 <tr><td>Names of apps with a home-screen icon</td><td>Senior's phone</td><td>So family can choose which apps appear on the home screen</td><td>Our cloud database, refreshed daily</td></tr>
 <tr><td>Daily "I'm OK" check-ins and "call me" requests</td><td>Senior</td><td>Tell linked family they're fine or want a call</td><td>Sent to linked family; kept 90 days</td></tr>
+<tr><td>Photos of contacts and medicines added from the family app</td><td>Family member</td><td>Show on the senior's call buttons and medicine reminders</td><td>Firebase Storage until replaced or removed; a copy is kept on the senior's phone</td></tr>
 <tr><td>Photos and notes sent by family</td><td>Family member (and anyone in the photo)</td><td>Show them on the senior's home screen</td><td>Firebase Storage and our database; <strong>deleted after 30 days</strong>, or earlier by the sender</td></tr>
+<tr id="health"><td>Health readings from a watch, band or monitor via Health Connect: steps, heart rate (latest, daily average / min / max, resting), sleep duration, blood oxygen, blood pressure, blood glucose</td><td>Senior</td><td>Show them to linked family (latest readings and a 7-day summary) and, only if the family turns it on, a heart-rate alert. <strong>Only after the senior agrees in Settings</strong>, and only the readings they allow in Health Connect.</td><td>Our cloud database; daily summaries deleted after 90 days; removed when sharing is stopped. <strong>Never used for advertising or product suggestions, never sold or shared with anyone but linked family.</strong></td></tr>
 <tr><td>Numbers of incoming calls not saved in contacts (call shield)</td><td>Callers</td><td>Warn about, silence or block possible scam calls</td><td><strong>Checked on the phone only.</strong> Numbers are never uploaded; family sees a daily count.</td></tr>
 <tr><td>Location</td><td>Senior</td><td>Only when SOS is pressed or a fall is detected, to tell family where they are</td><td>Sent to linked family; stored with that alert</td></tr>
 <tr><td>Google account name and email</td><td>Family member</td><td>Sign in, link phones, receipts, support replies</td><td>Our cloud database and Firebase Authentication</td></tr>
@@ -52,6 +54,7 @@
 <li>Account, device, contacts and medicine data: until you delete the account or the app has been inactive for 24 months.</li>
 <li>SOS, check-in, safety and missed-dose alerts, and dose records: 90 days.</li>
 <li>Photos and notes from family: 30 days.</li>
+<li>Health readings: latest values until sharing is stopped; daily summaries 90 days.</li>
 <li>Phone status: only the latest report is kept (overwritten).</li>
 <li>Support tickets: 2 years after closing.</li>
 <li>Purchase records: 8 years, as required for tax records in India (kept without your email after account deletion).</li>

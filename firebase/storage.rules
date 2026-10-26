@@ -17,5 +17,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
       allow delete: if request.auth != null && request.auth.uid in dev(deviceId).family;
     }
+    // Photos of contacts and medicines added from the family app: media/{deviceId}/{kind}/{id}-{time}.jpg
+    match /media/{deviceId}/{kind}/{file} {
+      allow read: if request.auth != null
+        && (dev(deviceId).ownerUid == request.auth.uid || request.auth.uid in dev(deviceId).family);
+      allow create: if request.auth != null
+        && request.auth.uid in dev(deviceId).family
+        && dev(deviceId).premium == true
+        && kind in ['contacts', 'medicines']
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
   }
 }

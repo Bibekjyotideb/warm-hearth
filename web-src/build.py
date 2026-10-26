@@ -24,6 +24,9 @@ SITE = {
     "privacy_contact": "support@lusanetech.com",
     "play": "https://play.google.com/store/apps/details?id=com.lusanetech.warmhearth",
     "updated": "26 October 2026",
+    # Affiliate tags (Amazon Associates). Leave empty until approved; links still work without them.
+    "amazon_tag_in": "",
+    "amazon_tag_us": "",
     # Illustration used as the "photo from family" on screens (no real people's photos on the site).
     "sunrise": '<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C27A"/><stop offset=".55" stop-color="#F3A066"/><stop offset="1" stop-color="#E9895E"/></linearGradient></defs><rect width="400" height="300" fill="url(#sky)"/><circle cx="250" cy="175" r="46" fill="#FFF1C9"/><path d="M0 200 Q90 150 180 190 T400 170 V300 H0Z" fill="#B76E57"/><path d="M0 235 Q120 195 230 228 T400 215 V300 H0Z" fill="#7F4E45"/><path d="M0 262 H400 V300 H0Z" fill="#3E3431"/><g stroke="#3E3431" stroke-width="7"><path d="M20 262 V214M80 262 V214M140 262 V214M200 262 V214M260 262 V214M320 262 V214M380 262 V214"/><path d="M0 214 H400" stroke-width="9"/></g><path d="M300 120 q8 -6 16 0 q8 -6 16 0" fill="none" stroke="#7F4E45" stroke-width="3" stroke-linecap="round"/></svg>',
 }
@@ -91,6 +94,7 @@ FOOT = """</main>
       <ul>
         <li><a href="/support">Contact support</a></li>
         <li><a href="/#faq">Questions</a></li>
+        <li><a href="/devices">Watches that work with WarmHearth</a></li>
         <li><a href="{play}">Google Play</a></li>
       </ul>
     </div>
@@ -114,6 +118,9 @@ PAGES = [
      '<script type="module" src="/js/support.js"></script>'),
     ("delete-account.html", "/delete-account", "Delete your account – WarmHearth", "How to delete your WarmHearth account and data.",
      '<script type="module" src="/js/support.js"></script>'),
+    ("devices.html", "/devices", "Best smartwatch for elderly parents – watches that work with WarmHearth",
+     "Smartwatches and fitness bands that share heart rate, steps, sleep and more with family through WarmHearth and Health Connect. Budget to fall-detection picks.",
+     '<script src="/js/demo.js" defer></script>'),
     ("404.html", "/404", "Page not found – WarmHearth", "This page does not exist.", ""),
 ]
 
@@ -144,7 +151,31 @@ def fill(s: str) -> str:
     s = re.sub(r"\{\{phone:(\w+)(?:\|([^}]*))?\}\}", lambda m: phone(m.group(1), m.group(2) or ""), s)
     s = re.sub(r"\{\{screen:(\w+)\}\}", lambda m: screen(m.group(1)), s)
     s = re.sub(r"\{\{icon:(\w+)\}\}", lambda m: icon(m.group(1)), s)
+    s = s.replace("{{devices}}", devices_html()) if "{{devices}}" in s else s
     return re.sub(r"\{\{(\w+)\}\}", lambda m: SITE[m.group(1)], s)
+
+
+def devices_html() -> str:
+    """The /devices list, from data/devices.json. Links carry the affiliate tag; region picked in JS."""
+    from urllib.parse import quote_plus
+    items = json.loads((ROOT / "data" / "devices.json").read_text())
+    tiers = {"budget": ("Under ₹5,000", "Under $60"), "mid": ("₹5,000 – ₹15,000", "$60 – $200"), "premium": ("Above ₹15,000", "Above $200")}
+    out = []
+    for it in items:
+        q = quote_plus(it["search"])
+        tin = f"&tag={SITE['amazon_tag_in']}" if SITE["amazon_tag_in"] else ""
+        tus = f"&tag={SITE['amazon_tag_us']}" if SITE["amazon_tag_us"] else ""
+        t_in, t_us = tiers[it["tier"]]
+        feats = "".join(f'<li class="{"warn" if f in ("Fall detection", "SOS call") else ""}">{f}</li>' for f in it["features"])
+        out.append(
+            f'<article class="device" id="{it["id"]}" data-tier="{it["tier"]}">'
+            f'<div class="device-head"><h3>{it["name"]}</h3><span class="tier" data-in="{t_in}" data-intl="{t_us}">{t_us}</span></div>'
+            f'<ul class="feats">{feats}</ul><p>{it["note"]}</p><p class="muted small">Syncs through the {it["app"]} app.</p>'
+            f'<a class="btn btn-ghost" rel="sponsored noopener" target="_blank" '
+            f'data-in="https://www.amazon.in/s?k={q}{tin}" data-intl="https://www.amazon.com/s?k={q}{tus}" '
+            f'href="https://www.amazon.com/s?k={q}{tus}">See prices on Amazon</a><span class="aff">Affiliate link</span></article>'
+        )
+    return "".join(out)
 
 
 def main():
@@ -166,7 +197,7 @@ def main():
 
     # docs/app-preview.html: every app screen side by side, for reviewing the design without a phone.
     shots = [("home", "Home screen"), ("note", "Photo from family"), ("call", "Tap a face"), ("sos", "SOS"), ("meds", "Medicine alarm"), ("scam", "Scam check"),
-             ("shield", "Scam call shield"), ("family", "Family dashboard"), ("famalert", "Family alerts"), ("famsafety", "Safety settings"), ("famphoto", "Send a photo")]
+             ("shield", "Scam call shield"), ("family", "Family dashboard"), ("famalert", "Family alerts"), ("famsafety", "Safety settings"), ("famvitals", "Health readings"), ("famphoto", "Send a photo")]
     grid = "".join(f'<figure class="preview">{phone(n, t)}<figcaption>{t}</figcaption></figure>' for n, t in shots)
     preview = HEAD.format(title="WarmHearth app preview", description="App screens", url=SITE["url"], path="/preview", extra_head="", logo=LOGO)
     (ROOT.parent / "docs").mkdir(exist_ok=True)

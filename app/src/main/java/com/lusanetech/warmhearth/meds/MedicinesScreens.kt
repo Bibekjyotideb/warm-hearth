@@ -226,7 +226,9 @@ fun MedicineEditorDialog(
     var name by remember { mutableStateOf(initial.name) }
     var dose by remember { mutableStateOf(initial.dose) }
     var photo by remember { mutableStateOf(initial.photoPath) }
+    var tone by remember { mutableStateOf(initial.tone) }
     val times = remember { mutableStateListOf<String>().apply { addAll(initial.timeList()) } }
+    val tones = remember { com.lusanetech.warmhearth.util.Tones.list(context) }
 
     val pickPhoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) scope.launch { PhotoStore.save(context, uri, initial.id)?.let { photo = it } }
@@ -266,13 +268,20 @@ fun MedicineEditorDialog(
                     Icon(Icons.Filled.Add, contentDescription = null)
                     Text(stringResource(R.string.add_time))
                 }
+                com.lusanetech.warmhearth.util.TonePicker(tone, tones, includeDefault = true) { tone = it }
             }
         },
         confirmButton = {
             TextButton(
                 enabled = name.isNotBlank() && times.isNotEmpty(),
                 onClick = {
-                    onSave(initial.copy(name = name.trim(), dose = dose.trim(), photoPath = photo, times = times.sorted().joinToString(","), updatedAt = System.currentTimeMillis()))
+                    onSave(
+                        initial.copy(
+                            name = name.trim(), dose = dose.trim(), photoPath = photo, tone = tone,
+                            photoUrl = if (photo != initial.photoPath) null else initial.photoUrl,
+                            times = times.sorted().joinToString(","), updatedAt = System.currentTimeMillis(),
+                        ),
+                    )
                 },
             ) { Text(stringResource(R.string.save)) }
         },
