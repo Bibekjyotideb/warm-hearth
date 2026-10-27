@@ -12,7 +12,8 @@ One Android app with two modes:
   - Daily "I'm OK" and "Ask my family to call me".
   - Photos from family on the home screen.
   - A scam call shield, plus AI "Is this a scam?" and "Read it to me".
-  - Voice commands, in English and Hindi.
+  - Voice commands. App screens in English and Hindi; works in any country (local emergency
+    number, glucose units and prices).
 - **On the son's or daughter's phone:** a dashboard for each parent.
   - Is the phone OK: checked in, took medicines, active recently, battery, on silent.
   - Safety alerts, with one-tap "Ring phone" and "Turn ringer on".
@@ -35,9 +36,9 @@ In-App Messaging, Hosting) · English + Hindi.
 |---|---|
 | [`docs/HANDOVER.md`](docs/HANDOVER.md) | Full project context: status, decisions and why, architecture, data model, conventions, risks, history |
 | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Step-by-step setup and runbooks: Zoho email, Firebase, deploy, domain, Play Console, admin panel, releases, monitoring, Remote Config keys, referral links, breach response |
-| [`docs/PLAY_COMPLIANCE.md`](docs/PLAY_COMPLIANCE.md) | Why each feature is allowed on Google Play, every Play Console form answer, Indian law checklist |
+| [`docs/PLAY_COMPLIANCE.md`](docs/PLAY_COMPLIANCE.md) | Why each feature is allowed on Google Play, every Play Console form answer, Indian and worldwide law checklists |
 | [`docs/DATA_SAFETY.md`](docs/DATA_SAFETY.md) | Play Data safety answers and the Health Connect declaration text |
-| [`store-listing/`](store-listing) | Play listing copy (en-US, hi-IN), keyword research results |
+| [`store-listing/`](store-listing) | Play listing copy: en-US, en-GB, hi-IN, es-419, es-ES, pt-BR, de-DE, fr-FR, id-ID; keyword research results |
 | [`CLAUDE.md`](CLAUDE.md) | Rules for AI coding sessions on this repo |
 | [`docs/app-preview.html`](docs/app-preview.html), [`docs/screens/`](docs/screens) | All app screens and website screenshots |
 
@@ -48,15 +49,20 @@ One subscription covers every parent phone the subscriber links.
 
 | | Monthly | Yearly |
 |---|---|---|
+| United States (and default) | $4.99 | $39.99 |
+| United Kingdom | £4.49 | £34.99 |
+| Eurozone | €4.99 | €39.99 |
 | India | ₹149 | ₹899 |
-| Rest of world | US$4.99 | US$39.99 |
+
+Other countries get Play's local equivalent; lower prices for Brazil, Mexico, Indonesia and the
+Philippines are suggested in `docs/OPERATIONS.md` §4.
 
 - **Free:** SOS, check-ins, call requests, photo notes, call shield, 4 contacts, 3 AI checks a day.
 - **Premium:** safety alerts, ring phone / ringer on, remote control, medicine tracking, fall
   detection, health readings, unlimited contacts and AI.
 - **Fees:** Google keeps 15%.
-- **Referral links:** recommended watches on `/devices` earn a small extra (for now through a
-  partner's Amazon Associates account).
+- **Referral links:** recommended watches on `/devices` open the visitor's own Amazon store and earn
+  a small extra where a tracking ID is set (for now a partner's amazon.in / amazon.com accounts).
 
 ## Repository
 
@@ -88,7 +94,7 @@ docs/           handover, operations, compliance, data safety, screenshots
 ### Placeholders to fill before launch
 - Proprietor's legal name and address: `firebase/functions/src/config.js` and `web-src/build.py`.
 - Firebase web config: `web-src/js/firebase-config.js`.
-- Amazon tracking IDs, from the partner account: `web-src/build.py` (`amazon_tag_in`, `amazon_tag_us`).
+- Amazon tracking IDs, one per country store: `web-src/build.py` (`SITE["amazon_tags"]`).
 
 ## Keyword research
 

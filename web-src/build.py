@@ -23,12 +23,13 @@ SITE = {
     "billing": "billing@lusanetech.com",
     "privacy_contact": "support@lusanetech.com",
     "play": "https://play.google.com/store/apps/details?id=com.lusanetech.warmhearth",
-    "updated": "26 October 2026",
+    "updated": "27 October 2026",
     # Affiliate tracking IDs (Amazon Associates), currently the partner account (owner's brother).
     # That account must list warmhearth.lusanetech.com under Account settings → Website and mobile app list.
     # Leave empty and the links still work, just without commission.
-    "amazon_tag_in": "",
-    "amazon_tag_us": "",
+    # One entry per Amazon store the account(s) are approved for, e.g. {"amazon.in": "name-21"}.
+    # Visitors in other countries get their local store without a tag (no commission there yet).
+    "amazon_tags": {"amazon.in": "", "amazon.com": ""},
     # Illustration used as the "photo from family" on screens (no real people's photos on the site).
     "sunrise": '<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6C27A"/><stop offset=".55" stop-color="#F3A066"/><stop offset="1" stop-color="#E9895E"/></linearGradient></defs><rect width="400" height="300" fill="url(#sky)"/><circle cx="250" cy="175" r="46" fill="#FFF1C9"/><path d="M0 200 Q90 150 180 190 T400 170 V300 H0Z" fill="#B76E57"/><path d="M0 235 Q120 195 230 228 T400 215 V300 H0Z" fill="#7F4E45"/><path d="M0 262 H400 V300 H0Z" fill="#3E3431"/><g stroke="#3E3431" stroke-width="7"><path d="M20 262 V214M80 262 V214M140 262 V214M200 262 V214M260 262 V214M320 262 V214M380 262 V214"/><path d="M0 214 H400" stroke-width="9"/></g><path d="M300 120 q8 -6 16 0 q8 -6 16 0" fill="none" stroke="#7F4E45" stroke-width="3" stroke-linecap="round"/></svg>',
 }
@@ -86,6 +87,7 @@ FOOT = """</main>
       <h4>Legal</h4>
       <ul>
         <li><a href="/privacy">Privacy policy</a></li>
+        <li><a href="/health-data-privacy">Consumer health data privacy</a></li>
         <li><a href="/terms">Terms of service</a></li>
         <li><a href="/refunds">Refund policy</a></li>
         <li><a href="/delete-account">Delete your account</a></li>
@@ -114,6 +116,8 @@ PAGES = [
      "WarmHearth turns your parent's Android phone into a simple elderly launcher (big buttons, SOS, medicine alarms, scam call shield) and gives you a family app with daily check-ins and safety alerts. Free, with a 7-day trial of Premium.",
      '<script src="/js/demo.js" defer></script>'),
     ("privacy.html", "/privacy", "Privacy policy – WarmHearth", "How WarmHearth collects, uses and protects personal data.", ""),
+    ("health-data-privacy.html", "/health-data-privacy", "Consumer health data privacy policy – WarmHearth",
+     "How WarmHearth handles consumer health data under Washington, Nevada and other US state laws.", ""),
     ("terms.html", "/terms", "Terms of service – WarmHearth", "The terms for using WarmHearth.", ""),
     ("refunds.html", "/refunds", "Refunds & cancellation – WarmHearth", "How to cancel WarmHearth Premium and get a refund.", ""),
     ("support.html", "/support", "Help & support – WarmHearth", "Get help with WarmHearth or contact support.",
@@ -158,26 +162,28 @@ def fill(s: str) -> str:
 
 
 def devices_html() -> str:
-    """The /devices list, from data/devices.json. Links carry the affiliate tag; region picked in JS."""
+    """The /devices list, from data/devices.json. The visitor's Amazon store and currency are picked in
+    js/demo.js (region from ?c= or the browser); affiliate tags come from SITE["amazon_tags"]."""
     from urllib.parse import quote_plus
     items = json.loads((ROOT / "data" / "devices.json").read_text())
-    tiers = {"budget": ("Under ₹5,000", "Under $60"), "mid": ("₹5,000 – ₹15,000", "$60 – $200"), "premium": ("Above ₹15,000", "Above $200")}
+    tiers = {
+        "budget": ("Under ₹5,000", "Under £50", "Under €60", "Under $60"),
+        "mid": ("₹5,000 – ₹15,000", "£50 – £150", "€60 – €180", "$60 – $200"),
+        "premium": ("Above ₹15,000", "Above £150", "Above €180", "Above $200"),
+    }
     out = []
     for it in items:
-        q = quote_plus(it["search"])
-        tin = f"&tag={SITE['amazon_tag_in']}" if SITE["amazon_tag_in"] else ""
-        tus = f"&tag={SITE['amazon_tag_us']}" if SITE["amazon_tag_us"] else ""
-        t_in, t_us = tiers[it["tier"]]
+        inr, gbp, eur, usd = tiers[it["tier"]]
         feats = "".join(f'<li class="{"warn" if f in ("Fall detection", "SOS call") else ""}">{f}</li>' for f in it["features"])
         out.append(
             f'<article class="device" id="{it["id"]}" data-tier="{it["tier"]}">'
-            f'<div class="device-head"><h3>{it["name"]}</h3><span class="tier" data-in="{t_in}" data-intl="{t_us}">{t_us}</span></div>'
+            f'<div class="device-head"><h3>{it["name"]}</h3><span class="tier" data-inr="{inr}" data-gbp="{gbp}" data-eur="{eur}" data-usd="{usd}">{usd}</span></div>'
             f'<ul class="feats">{feats}</ul><p>{it["note"]}</p><p class="muted small">Syncs through the {it["app"]} app.</p>'
-            f'<a class="btn btn-ghost" rel="sponsored noopener" target="_blank" '
-            f'data-in="https://www.amazon.in/s?k={q}{tin}" data-intl="https://www.amazon.com/s?k={q}{tus}" '
-            f'href="https://www.amazon.com/s?k={q}{tus}">See prices on Amazon</a><span class="aff">Affiliate link</span></article>'
+            f'<a class="btn btn-ghost" rel="sponsored noopener" target="_blank" data-search="{it["search"]}" '
+            f'href="https://www.amazon.com/s?k={quote_plus(it["search"])}">See prices on Amazon</a><span class="aff">Affiliate link</span></article>'
         )
-    return "".join(out)
+    tags = json.dumps({k: v for k, v in SITE["amazon_tags"].items() if v}).replace('"', "&quot;")
+    return f'<div class="devices" data-tags="{tags}">' + "".join(out) + "</div>"
 
 
 def main():

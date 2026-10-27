@@ -1,4 +1,6 @@
-# Google Play listing — English (en-US, also use for en-IN / en-GB)
+# Google Play listing — English (en-US; also use for en-IN, en-CA, en-PH, en-SG and as the default)
+
+en-GB / en-AU / en-NZ / en-ZA use `en-GB.md` (Mum, colour).
 
 Keyword research (live Play data, 25 Oct 2026, scorer in `tools/`):
 
@@ -21,15 +23,15 @@ Senior launcher with big icons, SOS, medicine alarms & AI scam check for parents
 
 ## Full description (max 4000)
 
-WarmHearth is the elderly launcher that turns any Android phone into an easy phone for Mum and Dad: big icons, big text, one tap to call family, and an SOS button that really works. Families set it up once, then manage it from their own phone.
+WarmHearth is the elderly launcher that turns any Android phone into an easy phone for Mom and Dad: big icons, big text, one tap to call family, and an SOS button that really works. Families set it up once, then manage it from their own phone.
 
 ★ MADE FOR SENIORS
 • Big launcher with large, clear buttons and extra-large text (3 sizes). Looks like a modern phone, not a toy
-• Photo contacts: tap a face to call. "Call Asha?" — Yes / No, so no accidental calls
+• Photo contacts: tap a face to call. "Call Sarah?" — Yes / No, so no accidental calls
 • Big dialer with large numbers
 • Clock, date and battery always visible
 • Settings locked with a PIN, so nothing gets changed by mistake
-• Works in English and Hindi
+• App screens in English and Hindi (more languages coming); works in any country
 
 ★ SOS & SAFETY
 • Daily "I'm OK": one tap each morning tells the family all is well
@@ -37,13 +39,13 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • Scam call shield: warn about, silence or block calls from unknown numbers
 • Hold the red SOS button for 3 seconds: family gets an alert with the location, and the emergency contact is called
 • Fall detection: if the phone senses a fall and there's no answer in 30 seconds, SOS starts by itself
-• Send location by SMS and call 112 / 911 in one tap
+• Send location by SMS and call your local emergency number (911, 112, 999…) in one tap
 
 ★ AI HELPERS
 • "Is it a scam?" — share any SMS or WhatsApp message and get a clear answer in simple words: Scam, Be careful, or Looks safe. Read aloud.
 • "Read it to me" — take a photo of a letter, bill or notice and hear what it means
 • Medicine box reader — photograph the strip and the medicine name and dose are filled in
-• Voice commands — say "Call Asha", "Open WhatsApp", "Medicine" or "Help"
+• Voice commands — say "Call Sarah", "Open WhatsApp", "Medicine" or "Help"
 
 ★ MEDICINE REMINDERS
 • Full-screen alarm with a photo of the pill and a big "I took it" button
@@ -57,7 +59,7 @@ WarmHearth is the elderly launcher that turns any Android phone into an easy pho
 • See today's medicines: taken or missed, in their time zone
 • Send photos and notes that appear big on their home screen
 • Control their phone from yours: add and edit contacts with photos, choose whose faces show on the home screen, medicine times and reminder sounds (even a spoken reminder), text size, buttons, fall detection and the PIN
-• Health readings from their watch or band through Health Connect: heart rate, steps, sleep, blood oxygen, blood pressure (Samsung Health, Fitbit, Mi Fitness, Zepp)
+• Health readings from their watch or band through Health Connect: heart rate, steps, sleep, blood oxygen, blood pressure (Samsung Health, Fitbit, Google Fit, Mi Fitness, Zepp and more)
 • Brothers and sisters can link too
 
 ★ FREE, WITH PREMIUM WHEN YOU NEED IT
@@ -73,7 +75,7 @@ Not an emergency service or medical device: SOS and alerts depend on battery and
 Note: fall detection and AI answers are helpers, not medical devices or professional advice.
 
 ## Screenshot captions (8, in this order)
-1. A simpler phone for Mum & Dad
+1. A simpler phone for Mom & Dad
 2. Tap a face to call — no mistakes
 3. SOS alerts family with location
 4. "Is it a scam?" — AI checks any message

@@ -345,7 +345,7 @@
     <string name="sleep_hours_sub">रात में साइलेंट या गतिविधि वाले अलर्ट नहीं</string>
     <string name="safety_privacy_note">उनका फ़ोन सिर्फ़ बैटरी, रिंगर, आख़िरी इस्तेमाल का समय और टाइम ज़ोन साझा करता है। कभी संदेश, कॉल, इस्तेमाल किए ऐप या लोकेशन नहीं।</string>
     <string name="note_compose_title">%1$s को फ़ोटो या संदेश भेजें</string>
-    <string name="note_placeholder">सुप्रभात माँ! आज स्कूल में रिया।</string>
+    <string name="note_placeholder">सुप्रभात! आज स्कूल में रिया।</string>
     <string name="add_photo">फ़ोटो जोड़ें</string>
     <string name="change_photo">फ़ोटो बदलें</string>
     <string name="note_sent">भेज दिया। अब यह %1$s की होम स्क्रीन पर है।</string>
@@ -484,4 +484,10 @@
     <string name="share_sees_active">क्या आपने हाल में फ़ोन इस्तेमाल किया, सिर्फ़ \"पिछले एक घंटे में सक्रिय\" या \"आज पहले\" जैसा, ताकि उन्हें पता रहे आप ठीक हैं। आपने फ़ोन पर क्या किया, कभी नहीं।</string>
     <string name="share_active_toggle">मैं सक्रिय हूँ, यह दिखाएं</string>
     <string name="share_active_toggle_sub">\"फ़ोन इस्तेमाल नहीं हुआ\" अलर्ट के लिए ज़रूरी</string>
+    <string name="tier_budget_gb">£50 से कम</string>
+    <string name="tier_mid_gb">£50 – £150</string>
+    <string name="tier_premium_gb">£150 से ऊपर</string>
+    <string name="tier_budget_eu">€60 से कम</string>
+    <string name="tier_mid_eu">€60 – €180</string>
+    <string name="tier_premium_eu">€180 से ऊपर</string>
 </resources>

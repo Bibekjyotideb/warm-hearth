@@ -49,7 +49,7 @@
     <string name="speak">Speak</string>
     <string name="sos_help">Get help</string>
     <string name="voice_not_understood">Sorry, I didn\'t understand</string>
-    <string name="voice_examples">I heard: \"%1$s\".\n\nTry saying:\n• \"Call Asha\"\n• \"Open WhatsApp\"\n• \"Medicine\"\n• \"Help\"</string>
+    <string name="voice_examples">I heard: \"%1$s\".\n\nTry saying:\n• \"Call Sarah\"\n• \"Open WhatsApp\"\n• \"Medicine\"\n• \"Help\"</string>
 
     <!-- Calls & people -->
     <string name="call_question">Call %1$s?</string>
@@ -356,7 +356,7 @@
     <string name="sleep_hours_sub">No silent or no-activity alerts at night</string>
     <string name="safety_privacy_note">Their phone shares only battery, ringer, last time it was used and time zone. Never messages, calls, apps used or location.</string>
     <string name="note_compose_title">Send %1$s a photo or a note</string>
-    <string name="note_placeholder">Good morning Maa! Here\'s Riya at school today.</string>
+    <string name="note_placeholder">Good morning! Here\'s Riya at school today.</string>
     <string name="add_photo">Add photo</string>
     <string name="change_photo">Change photo</string>
     <string name="note_sent">Sent. It\'s on %1$s\'s home screen now.</string>
@@ -495,4 +495,10 @@
     <string name="share_sees_active">Whether you\'ve used your phone recently, shown only as \"active in the last hour\" or \"earlier today\", so they know you\'re fine. Never what you did on it.</string>
     <string name="share_active_toggle">Show when I\'m active</string>
     <string name="share_active_toggle_sub">Needed for the \"phone not used\" alert</string>
+    <string name="tier_budget_gb">Under £50</string>
+    <string name="tier_mid_gb">£50 – £150</string>
+    <string name="tier_premium_gb">Above £150</string>
+    <string name="tier_budget_eu">Under €60</string>
+    <string name="tier_mid_eu">€60 – €180</string>
+    <string name="tier_premium_eu">Above €180</string>
 </resources>

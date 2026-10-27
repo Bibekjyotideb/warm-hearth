@@ -1,43 +1,89 @@
+// Region: ?c=GB in the URL (the app sends this), else a guess from the time zone, else the browser
+// language. Used for example names, prices, price ranges and the Amazon store. Works worldwide;
+// India gets Indian names and ₹.
+const REGION = (() => {
+  const q = new URLSearchParams(location.search).get("c");
+  if (q && /^[A-Za-z]{2}$/.test(q)) return q.toUpperCase();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  const TZ = {
+    "Asia/Kolkata": "IN", "Asia/Calcutta": "IN", "Europe/London": "GB", "Europe/Dublin": "IE", "Australia/Sydney": "AU",
+    "Australia/Melbourne": "AU", "Australia/Brisbane": "AU", "Australia/Perth": "AU", "Australia/Adelaide": "AU",
+    "Pacific/Auckland": "NZ", "Asia/Tokyo": "JP", "Asia/Singapore": "SG", "Asia/Dubai": "AE", "Asia/Riyadh": "SA",
+    "America/Toronto": "CA", "America/Vancouver": "CA", "America/Mexico_City": "MX", "America/Sao_Paulo": "BR",
+    "Europe/Berlin": "DE", "Europe/Paris": "FR", "Europe/Madrid": "ES", "Europe/Rome": "IT", "Europe/Amsterdam": "NL",
+    "Europe/Brussels": "BE", "Europe/Vienna": "AT", "Europe/Stockholm": "SE", "Europe/Warsaw": "PL", "Europe/Istanbul": "TR",
+    "Africa/Cairo": "EG",
+  };
+  if (TZ[tz]) return TZ[tz];
+  const m = (navigator.language || "").match(/-([A-Za-z]{2})$/);
+  if (m) return m[1].toUpperCase();
+  return tz.startsWith("America/") ? "US" : "US";
+})();
+const EURO = ["DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT", "IE", "FI", "GR", "SK", "SI", "LU", "LV", "LT", "EE", "MT", "CY", "HR"];
+const MONEY = REGION === "IN" ? "IN" : REGION === "GB" ? "GB" : EURO.includes(REGION) ? "EU" : "US";
+
+// Indian visitors see Indian names and examples (data-india holds the alternative text).
+if (REGION === "IN") {
+  document.querySelectorAll("[data-india]").forEach((el) => { el.textContent = el.dataset.india; });
+  document.querySelectorAll("[data-india-name]").forEach((el) => { el.dataset.name = el.dataset.indiaName; });
+}
+
+// British English: "Mum" in the UK, Ireland, Australia, New Zealand, South Africa.
+const MUM = ["GB", "IE", "AU", "NZ", "ZA"].includes(REGION);
+if (MUM) {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) if (n.nodeValue.includes("Mom")) n.nodeValue = n.nodeValue.replace(/\bMom\b/g, "Mum");
+}
+
 // The hero: their phone (left) and yours (right), linked. What happens on theirs shows up on yours,
 // the way the real apps behave: "I'm OK", "Ask my family to call me", hold SOS, tap a face.
 (() => {
   const root = document.querySelector("#demo-senior .app-home");
   const fam = document.querySelector("#demo-family .app-family");
   if (!root) return;
+  const N = REGION === "IN" ? { mom: "Maa", kid: "Ravi" } : { mom: MUM ? "Mum" : "Mom", kid: "James" };
   const q = (s, el = root) => el.querySelector(s);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dialog = q("[data-dialog]"), text = q("[data-dialog-text]"), av = q("[data-dialog-av]");
   const yes = q("[data-yes]"), no = q("[data-no]");
 
   const now = new Date();
-  const hm = now.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
-  q("[data-clock]").textContent = hm;
-  q("[data-date]").textContent = now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+  const loc = navigator.language || "en-US";
+  const hm = now.toLocaleTimeString(loc, { hour: "numeric", minute: "2-digit" });
+  // Big digits, small AM/PM (the app does the same so it never wraps).
+  const parts = new Intl.DateTimeFormat(loc, { hour: "numeric", minute: "2-digit" }).formatToParts(now);
+  const clock = q("[data-clock]");
+  clock.textContent = parts.filter((x) => x.type !== "dayPeriod").map((x) => x.value).join("").trim();
+  const period = parts.find((x) => x.type === "dayPeriod");
+  if (period) { const sm = document.createElement("small"); sm.textContent = " " + period.value; clock.appendChild(sm); }
+  q("[data-date]").textContent = now.toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long" });
   const hour = now.getHours();
-  q("[data-checkin] .app-card-title").textContent = (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening") + ", Kamala";
+  const title = q("[data-checkin] .app-card-title");
+  const senior = title.querySelector("[data-senior]").textContent;
+  title.textContent = (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening") + ", " + senior;
 
   // ---- family phone helpers
   let pushTimer = 0;
-  function push(tone, title, body) {
+  function push(tone, t, body) {
     if (!fam) return;
     const p = q("[data-push]", fam);
     p.className = `fam-push t-${tone}`;
-    q("[data-push-title]", fam).textContent = title;
+    q("[data-push-title]", fam).textContent = t;
     q("[data-push-body]", fam).textContent = body;
     requestAnimationFrame(() => p.classList.add("show"));
     clearTimeout(pushTimer);
     pushTimer = setTimeout(() => p.classList.remove("show"), 4200);
   }
-  function hero(tone, title, sub) {
+  function hero(tone, t, sub) {
     if (!fam) return;
     q("[data-hero]", fam).className = `fam-hero t-${tone}`;
-    q("[data-hero-title]", fam).textContent = title;
+    q("[data-hero-title]", fam).textContent = t;
     q("[data-hero-sub]", fam).textContent = sub;
   }
   const used = () => {
     if (!fam) return;
-    q("[data-used]", fam).textContent = "just now";
-    if (q("[data-hero-title]", fam).textContent === "All good") q("[data-hero-sub]", fam).textContent = "Used the phone just now";
+    q("[data-used]", fam).textContent = "In the last hour";
+    if (q("[data-hero-title]", fam).textContent === "All good") q("[data-hero-sub]", fam).textContent = "Active in the last hour";
   };
 
   // ---- dialog on their phone
@@ -62,18 +108,17 @@
     open({ message: `Call ${b.dataset.name}?`, avatar: a.textContent, tone,
       onYes: () => open({ message: `Calling ${b.dataset.name}…`, avatar: a.textContent, tone }) });
   }));
-  q("[data-speak]").addEventListener("click", () => open({ message: 'Say "Call Ravi", "WhatsApp kholo" or "दवा"' }));
+  q("[data-speak]").addEventListener("click", () => open({ message: REGION === "IN" ? 'Say "Call Ravi", "WhatsApp kholo" or "दवा"' : 'Say "Call James", "Open WhatsApp" or "Medicine"' }));
 
   // "I'm OK"
   q("[data-ok]").addEventListener("click", () => {
-    const card = q("[data-checkin]");
-    card.classList.add("done");
+    q("[data-checkin]").classList.add("done");
     q("[data-ok]").hidden = true;
     q("[data-checkin-sub]").hidden = true;
     q("[data-ok-done]").hidden = false;
     used();
     if (fam) q("[data-checkin-val]", fam).textContent = `OK at ${hm}`;
-    push("grn", "✅ All good today", "Maa says she's OK today.");
+    push("grn", "✅ All good today", `${N.mom} says she's OK today.`);
   });
 
   // "Ask my family to call me"
@@ -82,7 +127,7 @@
     callme.className = "app-soft t-grn";
     callme.querySelector("span").textContent = "Sent. They'll call you soon";
     used();
-    push("blu", "📞 Call request", "Maa would like you to call her.");
+    push("blu", "📞 Call request", `${N.mom} would like you to call her.`);
   });
 
   // Hold SOS for 3 seconds (keyboard: hold Space or Enter)
@@ -96,11 +141,11 @@
     if (left > 0) raf = requestAnimationFrame(tick);
     else {
       reset();
-      open({ message: "Family alerted with your location. Calling Ravi now." });
+      open({ message: `Family alerted with your location. Calling ${N.kid} now.` });
       used();
-      hero("red", "Maa pressed SOS", "Just now. Tap to see her location");
-      push("red", "🆘 SOS", "Maa pressed SOS and needs help. Tap for her location.");
-      setTimeout(() => hero("grn", "All good", "Used the phone just now"), 9000);
+      hero("red", `${N.mom} pressed SOS`, "Just now. Tap to see her location");
+      push("red", "🆘 SOS", `${N.mom} pressed SOS and needs help. Tap for her location.`);
+      setTimeout(() => hero("grn", "All good", "Active in the last hour"), 9000);
     }
   }
   function begin(e) {
@@ -124,24 +169,28 @@
   sos.addEventListener("click", (e) => e.preventDefault());
 })();
 
-// Pricing: ₹ for visitors in India, $ elsewhere; yearly by default. Prices match Play Console.
+// Pricing: the visitor's currency where we set a local price (US$, £, €, ₹); yearly by default.
+// Must match Play Console (docs/OPERATIONS.md, "Prices by country"). Other countries: shown in Play.
 (() => {
   const box = document.getElementById("price-switch");
   if (!box) return;
-  const PRICES = {
-    IN: { yearly: ["₹899", " / year", "7 days free, then billed yearly through Google Play. Save 50% vs monthly (₹149 × 12)."],
-          monthly: ["₹149", " / month", "7 days free, then billed monthly through Google Play. Cancel any time."] },
-    INTL: { yearly: ["$39.99", " / year", "7 days free, then billed yearly through Google Play. Save 33% vs monthly ($4.99 × 12)."],
-            monthly: ["$4.99", " / month", "7 days free, then billed monthly through Google Play. Cancel any time."] },
+  const P = {
+    US: { sym: "$", m: "$4.99", y: "$39.99", save: 33 },
+    GB: { sym: "£", m: "£4.49", y: "£34.99", save: 35 },
+    EU: { sym: "€", m: "€4.99", y: "€39.99", save: 33 },
+    IN: { sym: "₹", m: "₹149", y: "₹899", save: 50 },
   };
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  const inIndia = /Asia\/(Kolkata|Calcutta)/.test(tz) || /-IN$|^hi\b/.test(navigator.language || "");
-  const state = { region: inIndia ? "IN" : "INTL", period: "yearly" };
+  const state = { region: MONEY, period: "yearly" };
   const price = document.querySelector("[data-price]"), per = document.querySelector("[data-per]"), note = document.querySelector("[data-note]");
   function render() {
-    const [p, u, n] = PRICES[state.region][state.period];
-    price.textContent = p; per.textContent = u; note.textContent = n;
-    document.querySelector("[data-free]").textContent = state.region === "IN" ? "₹0" : "$0";
+    const p = P[state.region];
+    const yearly = state.period === "yearly";
+    price.textContent = yearly ? p.y : p.m;
+    per.textContent = yearly ? " / year" : " / month";
+    note.textContent = yearly
+      ? `7 days free, then billed yearly through Google Play. Save ${p.save}% vs monthly.`
+      : "7 days free, then billed monthly through Google Play. Cancel any time.";
+    document.querySelector("[data-free]").textContent = p.sym + "0";
     box.querySelectorAll("[data-period]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.period === state.period)));
     box.querySelectorAll("[data-region]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.region === state.region)));
   }
@@ -155,17 +204,24 @@
   render();
 })();
 
-// /devices: Amazon.in and ₹ ranges for visitors in India, Amazon.com and $ elsewhere; price filter.
+// /devices: the visitor's Amazon store and currency ranges; price filter.
 (() => {
   const list = document.querySelector(".devices");
   if (!list) return;
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  const india = /Asia\/(Kolkata|Calcutta)/.test(tz) || /-IN$|^hi\b/.test(navigator.language || "");
-  const key = india ? "in" : "intl";
-  document.querySelectorAll(".devices [data-in], .tier-filter [data-in]").forEach((el) => {
-    const v = el.dataset[key];
-    if (el.tagName === "A") el.href = v; else el.textContent = v;
+  const STORE = {
+    IN: "amazon.in", US: "amazon.com", GB: "amazon.co.uk", CA: "amazon.ca", AU: "amazon.com.au", DE: "amazon.de", AT: "amazon.de",
+    FR: "amazon.fr", BE: "amazon.com.be", IT: "amazon.it", ES: "amazon.es", NL: "amazon.nl", SE: "amazon.se", PL: "amazon.pl",
+    IE: "amazon.co.uk", JP: "amazon.co.jp", MX: "amazon.com.mx", BR: "amazon.com.br", AE: "amazon.ae", SA: "amazon.sa",
+    SG: "amazon.sg", TR: "amazon.com.tr", EG: "amazon.eg",
+  };
+  const host = STORE[REGION] || "amazon.com";
+  const tags = JSON.parse(list.dataset.tags || "{}"); // affiliate tag per store, from build.py
+  list.querySelectorAll("a[data-search]").forEach((a) => {
+    const tag = tags[host] ? `&tag=${encodeURIComponent(tags[host])}` : "";
+    a.href = `https://www.${host}/s?k=${encodeURIComponent(a.dataset.search)}${tag}`;
   });
+  const key = { IN: "inr", GB: "gbp", EU: "eur", US: "usd" }[MONEY];
+  document.querySelectorAll("[data-usd]").forEach((el) => { el.textContent = el.dataset[key]; });
   const filter = document.querySelector(".tier-filter");
   filter.addEventListener("click", (e) => {
     const b = e.target.closest("button");

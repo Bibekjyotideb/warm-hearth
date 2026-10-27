@@ -63,12 +63,9 @@ object Sos {
         Apps.start(context, intent)
     }
 
-    fun emergencyNumber(): String = when (Locale.getDefault().country) {
-        "US", "CA" -> "911"
-        "GB" -> "999"
-        "AU" -> "000"
-        else -> "112" // India, EU and most GSM networks
-    }
+    /** Emergency services for the country the phone is in (SIM / network, then language setting). */
+    fun emergencyNumber(context: Context): String =
+        com.lusanetech.warmhearth.util.Region.emergencyNumber(com.lusanetech.warmhearth.util.Region.country(context))
 
     @SuppressLint("MissingPermission")
     suspend fun currentLocation(context: Context): Location? {

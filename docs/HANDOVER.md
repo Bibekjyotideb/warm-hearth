@@ -75,7 +75,9 @@ parent phone the subscriber links):
 | 3 AI scam checks/day | Medicine reminders + taken/missed tracking, fall detection |
 | | Health readings (Health Connect), 30 AI requests/day |
 
-**Prices:** India ₹149/month or ₹899/year; elsewhere US$4.99/month or US$39.99/year; 7-day free trial
+**Prices:** US $4.99/month or $39.99/year, UK £4.49/£34.99, Euro €4.99/€39.99, India ₹149/₹899,
+lower purchasing-power prices in Brazil, Mexico, Indonesia, the Philippines (full table: `OPERATIONS.md`
+§4); 7-day free trial
 (offer `free-trial-7d`), reminder email 2 days before the first charge. Google takes 15% on subscriptions.
 
 ---
@@ -85,7 +87,8 @@ parent phone the subscriber links):
 | Decision | Why |
 |---|---|
 | Kotlin + Jetpack Compose, minSdk 26, target 36 | Native launcher + alarms + call screening need platform APIs; Compose for the custom large UI. |
-| Firebase in `asia-south1` (Mumbai) | Indian users first; one vendor for auth, DB, push, functions, AI, hosting. |
+| Firebase in `asia-south1` (Mumbai) | Started India-first; one vendor for auth, DB, push, functions, AI, hosting. Fine for worldwide users (alerts are push, not latency-critical); EU/UK transfers covered by Google's SCCs (privacy policy §4). Moving region later means a new project, so don't plan on it. |
+| **Worldwide, India as one market among many** (Oct 2026) | The need (elderly parents living apart from children) is global. `util/Region.kt` gives country from SIM → network → locale, the local emergency number (911/999/112/000/…), glucose units (mmol/L in UK/EU/AU/CA…, mg/dL in US/IN…) and the currency for price labels. AI prompts answer in the phone's language and know the country. Website defaults to international examples (Margaret, James, Mom/Mum by region, $/£/€) and swaps to Indian ones (Kamala, Ravi, Maa, ₹) for India (`data-india` attributes, `web/js/demo.js`). |
 | Manual DI (`Graph` in `WarmHearthApp.kt`) | Small app; no Hilt complexity. |
 | Senior phone uses **anonymous** auth; family uses **Google** sign-in | Seniors never see a login; family needs an identity for purchases, email and multiple devices. |
 | Premium is **server-only** (`verifyPurchase` / `playRtdn` with the Play Developer API) | Firestore rules forbid clients from setting `premium`. |
@@ -98,7 +101,7 @@ parent phone the subscriber links):
 | Referral links on the **website** (`/devices`), not inside the app | Disclosure sits next to the links, affiliate programme rules are simplest, list is editable without a release. |
 | No advertising ID | No ads; simpler Data safety; AD_ID removed in the manifest. |
 | Emails: WarmHearth branding with a Lusane Technologies footer | Customers recognise the app; footer shows the legal seller; reusable for future apps via `config.js`. |
-| English + Hindi from day one | India is the first market; every string exists in both (`values/` and `values-hi/`). |
+| English + Hindi from day one; more languages next | Every string exists in both (`values/` and `values-hi/`). **Translation roadmap:** Spanish (`values-es`), Portuguese-Brazil (`values-pt-rBR`), German (`values-de`), then French and Indonesian (`values-in`). Store listings already exist in those languages (`store-listing/`) and say the app screens are English for now; remove that line per language when its strings ship. |
 
 ---
 
@@ -123,7 +126,7 @@ app/                                 Android app (com.lusanetech.warmhearth)
     settings/                        Settings, PIN, Tiles, SharingScreen (consent + Privacy & sharing)
     billing/                         Play Billing 8, paywall (Remote Config headline/offer)
     support/                         tickets in-app (+ OTA FAQ)
-    util/                            RemoteFlags (all OTA keys), Telemetry, Notifications, AlarmSound, Tones, PhotoStore, Links…
+    util/                            RemoteFlags (all OTA keys), Region (country, emergency number, units, currency), Telemetry, Notifications, AlarmSound, Tones, PhotoStore, Links…
   src/main/res/values{,-hi}/strings.xml   ~400 strings, English + Hindi, kept in parity
 firebase/
   firestore.rules  storage.rules  firestore.indexes.json (incl. TTL)  firebase.json
@@ -240,6 +243,11 @@ Remote Config is real-time while the app is open.
 - Health Connect approval can take time; keep `vitals_enabled=false` until approved.
 - Amazon referral relies on the brother's account and his site list.
 - Legal pages need a lawyer's review and the proprietor's real name/address.
+- Worldwide: EU/UK users may need a GDPR Art. 27 representative once there are regular EU/UK users
+  (`PLAY_COMPLIANCE.md` §3b). App screens are only English + Hindi, so non-English listings must
+  keep the "screens are English" line until translated. Amazon tags are per country.
+- Region detection uses the SIM; a traveller with a home SIM keeps home emergency numbers; GSM
+  phones route 112 and 911 to the local service in most countries, so this mostly still works.
 
 ---
 
@@ -251,4 +259,5 @@ Remote Config is real-time while the app is open.
 | 1.0 production layer | `cc8e57e` | Subscriptions + trial, website, legal pages, admin panel, tickets, emails, OTA basics |
 | 1.1 | `90c282b` | Redesign, family dashboard, check-ins, safety alerts, ring/ringer, photo notes, call shield, wider OTA |
 | 1.2 | `e0989fe` | Full remote control, reminder sounds incl. spoken, Health Connect vitals, device list + `/devices` |
-| 1.2 (compliance) | this commit | Consent before pairing, Privacy & sharing without PIN, installed-apps upload removed, in-app AI reporting, no AD_ID, legal + listing fixes, docs |
+| 1.2 (compliance) | `d4b9653` | Consent before pairing, Privacy & sharing without PIN, installed-apps upload removed, in-app AI reporting, no AD_ID, legal + listing fixes, docs |
+| 1.2 (worldwide) | this commit | `Region.kt` (emergency numbers, glucose units, currency), country-aware AI, international website with India variant, per-country Amazon stores + `amazon_tags`, local prices, GDPR transfer + US consumer health data pages, store listings for en-GB, es-419, es-ES, pt-BR, de-DE, fr-FR, id-ID |

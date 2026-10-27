@@ -151,7 +151,7 @@ private fun SosResultView(r: SosResult) {
         if (r.contacts.isNotEmpty()) {
             BigButton(stringResource(R.string.sos_send_sms), color = Palette.Brand, icon = Icons.Filled.Sms) { Sos.shareBySms(context, r) }
         }
-        val number = Sos.emergencyNumber()
+        val number = Sos.emergencyNumber(context)
         BigButton(stringResource(R.string.call_emergency, number), color = Palette.Red, icon = Icons.Filled.LocalHospital) {
             CallHelper.call(context, number)
         }

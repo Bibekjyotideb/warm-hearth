@@ -154,9 +154,27 @@ photo notes after 30 days) and the Storage rules.
 
 1. Create the app "Elderly Launcher: WarmHearth" (the listing title; the app name stays WarmHearth).
 2. **Monetize → Products → Subscriptions** → create `warmhearth_premium` ("WarmHearth Premium"):
-   - Base plan `monthly`, auto-renewing, 1 month. Prices: India **₹149**, United States **$4.99**; then
-     "Update other prices" from the US price so every other country gets a local equivalent.
-   - Base plan `yearly`, auto-renewing, 1 year. India **₹899**, United States **$39.99**, same for the rest.
+   - Base plan `monthly`, auto-renewing, 1 month, and base plan `yearly`, 1 year. Set the US price
+     first, use "Update other prices" so every country gets a local equivalent, then override the
+     countries in the table below (Play converts the rest and rounds to local price points).
+   - The website (`web/js/demo.js` → `P`) shows US / UK / Euro / India prices; keep them in step.
+
+   **Prices by country**
+
+   | Country | Monthly | Yearly | Note |
+   |---|---|---|---|
+   | United States (base) | $4.99 | $39.99 | |
+   | United Kingdom | £4.49 | £34.99 | inc. VAT (Play prices include VAT/GST everywhere) |
+   | Eurozone | €4.99 | €39.99 | |
+   | India | ₹149 | ₹899 | |
+   | Canada | C$6.49 | C$49.99 | |
+   | Australia / New Zealand | A$7.49 / NZ$7.99 | A$59.99 / NZ$64.99 | |
+   | Brazil | R$14.90 | R$119.90 | suggested lower (purchasing-power) price |
+   | Mexico | MX$59 | MX$499 | suggested lower price |
+   | Indonesia | Rp39.000 | Rp299.000 | suggested lower price |
+   | Philippines | ₱149 | ₱1,190 | suggested lower price |
+
+   Play's minimum price and local rounding apply. Revisit after 3 months of conversion data per country.
    - On each base plan: **Add offer** → id `free-trial-7d`, eligibility *New customer acquisition: never had
      this subscription*, phase **Free trial, 7 days**. Activate.
    - Grace period: 7 days; account hold: 30 days (Play defaults are fine).
@@ -273,14 +291,24 @@ Health Connect instead. In Play Console → App content, fill in the Health Conn
 `docs/DATA_SAFETY.md` (use case, one line per permission). Review takes a few days; until approved,
 keep `vitals_enabled = false` in Remote Config for production users.
 
-**Referral links.** The family app's "Which watch to buy?" opens `warmhearth.lusanetech.com/devices`,
-which holds the affiliate links and the disclosure.
+**Referral links.** The family app's "Which watch to buy?" opens `warmhearth.lusanetech.com/devices`
+(with `?c=` + the phone's country), which holds the affiliate links and the disclosure. The page picks
+the visitor's country (from `?c=`, time zone or browser language) and sends each button to a search on
+**that country's Amazon store** (amazon.com, .co.uk, .de, .in, .ca, .com.au, .co.jp and others; map in
+`web/js/demo.js` → `STORE`). Prices shown change to $, £, € or ₹.
 - **For now the links use your brother's existing Amazon Associates account** (your own account
   would be closed after 180 days without sales; apply for your own once there are users).
 - He must add `warmhearth.lusanetech.com` under Associates Central → Account settings →
   **Website and mobile app list**, otherwise the links break Amazon's agreement.
-- Put his tracking ID(s) in `web-src/build.py` → `SITE["amazon_tag_in"]` (amazon.in, ends in `-21`)
-  and `SITE["amazon_tag_us"]` (amazon.com, ends in `-20`), then `npm run build` and deploy hosting.
+- Amazon Associates is **separate per country**: an amazon.in tag only earns on amazon.in. Put each
+  tracking ID in `web-src/build.py` → `SITE["amazon_tags"]`, keyed by store domain, e.g.
+  `{"amazon.in": "xyz-21", "amazon.com": "xyz-20", "amazon.co.uk": "xyz0c-21", "amazon.de": "xyz06-21"}`,
+  then `npm run build` and deploy hosting. Stores without a tag get a plain (non-affiliate) link,
+  which is fine.
+- To earn in more countries from one account, join **Amazon OneLink** in US Associates Central and
+  link the UK, Canada, Germany, France, Italy, Spain and Japan accounts; then add each tag above.
+- Start with amazon.in and amazon.com (the brother's), add the UK and Germany once traffic shows up
+  there (Search Console → Countries).
 - Update products in `web-src/data/devices.json` (website) and Remote Config `shop_json` (app).
 Rules to keep: the list is the same for everyone and never based on health data (Health Connect
 policy), every page with links shows the disclosure, links say "(affiliate link)".
@@ -296,3 +324,7 @@ policy), every page with links shows the disclosure, links say "(affiliate link)
    when, likely impact, what you've done, what they should do, who to contact.
 4. Report to the Data Protection Board of India (and CERT-In within 6 hours for reportable cyber
    incidents). Get legal help for the wording.
+5. Users elsewhere: if EU/UK users are affected, notify their data protection authority (via the
+   EU/UK representative, or the ICO for the UK) **within 72 hours** of finding out. US states each
+   have their own breach-notice laws (most say "without unreasonable delay"; Washington: 30 days);
+   the user email in step 3 covers most of them.

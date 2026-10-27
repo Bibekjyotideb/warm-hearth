@@ -413,3 +413,4 @@ section { padding: clamp(3.5rem, 7vw, 6.5rem) 0; }
 .fam-row .bar { display: block; height: 2.4cqi; border-radius: 99px; background: linear-gradient(90deg, #1E7B34 var(--w), #EDEAE3 var(--w)); }
 .yours-phones { grid-template-columns: repeat(4, 1fr); }
 .device .aff { font-size: .8rem; color: var(--ink-soft); }
+.app-clock small { font-size: 6cqi; font-weight: 700; letter-spacing: 0; }

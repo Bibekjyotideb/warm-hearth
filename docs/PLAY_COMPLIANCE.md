@@ -1,6 +1,6 @@
 # Google Play and legal compliance
 
-Checked against Google Play policies and Indian law on 26 Oct 2026. Re-check when Play emails a
+Checked against Google Play policies, Indian law and the main laws for worldwide users on 27 Oct 2026. Re-check when Play emails a
 policy update (usually twice a year) and before every major feature. "Done" means done in code /
 docs; the **Play Console** column is what you fill in yourself before the first release.
 
@@ -25,6 +25,7 @@ docs; the **Play Console** column is what you fill in yourself before the first 
 | Medical claims | No unsupported medical claims; medical devices must declare. | Everywhere: "not an emergency service or medical device"; readings "can be wrong". Not a regulated device. |
 | Affiliate links | Must not be deceptive; health data must not drive recommendations. | Links live on the website `/devices` with a disclosure next to them; app list says "affiliate links"; same list for everyone. |
 | Families / children | Not for kids → set target audience 18+. | Terms: 18+ for family mode and purchases. |
+| Localized listings (Metadata policy: no misleading descriptions) | A listing in a language the app isn't in can be seen as misleading. | Listings in es, pt-BR, de, fr, id each say "the app's screens are in English (and Hindi) for now". Keep that line until each translation ships. |
 
 ## 2. Play Console forms to complete (App content)
 
@@ -56,10 +57,23 @@ docs; the **Play Console** column is what you fill in yourself before the first 
 | IT Act 2000 / SPDI Rules 2011 | Reasonable security, privacy policy, grievance officer | Covered by the same pages. |
 | Consumer Protection Act 2019 + E-commerce Rules | Clear pricing, refund policy, no dark patterns (auto-renew disclosed, easy cancel) | Refund page, trial reminder email 2 days before charge, cancel via Play. |
 | ASCI guidelines (affiliate / influencer disclosure) | Disclose material connection clearly next to the link | Disclosure on `/devices` and in-app. |
-| Amazon Associates agreement | Links only on sites listed in the associate's account; required disclosure statement | **Brother must add `warmhearth.lusanetech.com` to his Associates "Website and mobile app list".** Tracking ID goes in `web-src/build.py` `SITE["amazon_tag_in"/"amazon_tag_us"]`. Amazon closes accounts with no sales in 180 days (his account, his risk). |
+| Amazon Associates agreement | Links only on sites listed in the associate's account; required disclosure statement | **Brother must add `warmhearth.lusanetech.com` to his Associates "Website and mobile app list".** Tracking IDs go in `web-src/build.py` `SITE["amazon_tags"]`, one per country store. Amazon closes accounts with no sales in 180 days (his account, his risk). |
 | CDSCO (medical devices) | Software for diagnosis/treatment can be a medical device | WarmHearth doesn't diagnose or treat; reminders + display only, with disclaimers. Don't add dosage advice or "detects heart problems" claims. |
 | GST | Registration over ₹20 lakh/yr turnover; Google Play doesn't file your GST | Ask your CA when revenue starts. |
 | Trademark | "WarmHearth" | Search the IP India register and Play before filing class 9/42; file once you have traction. |
+
+## 3b. Laws for worldwide users (not legal advice)
+
+| Law | What it needs | Status |
+|---|---|---|
+| **EU GDPR / UK GDPR** | Lawful basis; **explicit consent** for health data (special category); rights incl. portability and objection; transfer safeguards for data leaving the EU/UK; breach notice within 72 h; **Art. 27 representative** in the EU and UK if you regularly serve people there without an office | Privacy policy §2 (controller, explicit consent for health), §4 (international transfers: Google SCCs + UK Addendum), §6 (rights, ICO). Breach steps in `OPERATIONS.md` §10 (includes the 72-hour authority notice for EU/UK users). **To do once EU/UK users are regular:** appoint EU + UK representatives (services cost roughly €/£100–300 a year) and name them in the privacy policy. |
+| **California CCPA/CPRA** and other US state privacy laws (VA, CO, CT, TX, OR…) | Notice, rights to know/delete/correct, appeal, no selling/sharing without opt-out, limits on sensitive data | Privacy policy §6 "United States". No selling or sharing for ads, so no "Do not sell" link needed. Thresholds (e.g. CCPA's $25M revenue) are likely not met yet; written to comply anyway. |
+| **Washington My Health My Data Act**, Nevada SB 370, Connecticut consumer health data | A **separate consumer health data privacy policy** linked from the homepage; consent to collect; **separate** consent to share; right to delete and to see who received data; no geofencing near health facilities | `/health-data-privacy` page, linked in every footer. Consent before Health Connect + separate sharing consent before linking. No geofencing. MHMDA has no revenue threshold, so this applies from the first Washington user. |
+| **COPPA** (US) / children's codes | Don't target under-13s | 18+ target audience; no child-directed content. |
+| **EU AI Act** | Chatbots must say they are AI | Every AI answer is labelled as AI in the app with "can be wrong". Not a high-risk system. |
+| **Consumer law / subscriptions** (EU, UK, US auto-renewal laws) | Clear price and renewal terms, easy cancel, trial reminder | Paywall terms line, Play's local prices incl. tax, trial reminder email, cancel in Play, refunds page. |
+| **Medical device rules** (FDA, EU MDR, UK MHRA) | Software that diagnoses or treats is regulated | Reminders, display and safety alerts only, with "not a medical device" everywhere. Don't add diagnosis or dosing advice. |
+| **Amazon Associates outside India** | One Associates account per country store; disclosure | Tags per store in `SITE["amazon_tags"]`; `/devices` disclosure covers all stores (`OPERATIONS.md` §9). |
 
 ## 4. Before each release
 
@@ -67,4 +81,6 @@ docs; the **Play Console** column is what you fill in yourself before the first 
 - [ ] No new personal data sent off the phone without a disclosure + consent line in-app and a row in the privacy policy
 - [ ] Store listing: no rankings, testimonials, "best", or emoji in the title
 - [ ] AI features still have the in-app report button
+- [ ] New data or purposes also added to `/health-data-privacy` if health-related
+- [ ] Localized listings updated (and "screens are English" line removed for languages now translated)
 - [ ] `versionCode` raised; staged rollout

@@ -48,8 +48,14 @@ object AiHelper {
 
     private fun note() = RemoteFlags.aiPromptNote.takeIf { it.isNotBlank() }?.let { "\n$it" } ?: ""
 
-    /** Hindi phones get Hindi answers; everything else English. */
-    private fun language(): String = if (Locale.getDefault().language == "hi") "Hindi" else "simple English"
+    /** Answers in the phone's language (Gemini handles most languages); plain words for an older reader. */
+    private fun language(): String = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH).ifBlank { "English" }.let { "simple $it" }
+
+    /** Country name for local context (bank names, scam types, emergency numbers). */
+    private fun place(context: Context): String {
+        val code = com.lusanetech.warmhearth.util.Region.country(context)
+        return Locale("", code).getDisplayCountry(Locale.ENGLISH).ifBlank { "the user's country" }
+    }
 
     enum class Risk { SAFE, SUSPICIOUS, SCAM }
     data class ScamVerdict(val risk: Risk, val explanation: String, val advice: String)
@@ -64,10 +70,12 @@ object AiHelper {
 
     suspend fun checkScam(context: Context, message: String): Result<ScamVerdict> = call(context, AiQuota.Kind.SCAM) {
         val prompt = """
-            You protect an elderly person from scams. Look at this message they received.
-            Common scams: fake bank/KYC/UPI alerts, "your account is blocked", lottery or prize,
-            OTP requests, parcel/customs fees, fake relatives in trouble, job offers, links asking
-            to log in, threats from "police" or "electricity board".
+            You protect an elderly person in ${place(context)} from scams. Look at this message they received.
+            Common scams everywhere: fake bank or payment alerts ("your account is blocked", "verify
+            your details", KYC, UPI, card suspended), one-time code / OTP requests, lottery or prize wins,
+            parcel or customs fees, a relative or grandchild "in trouble" needing money, tech support or
+            refund calls, government / tax / police / utility threats, investment or crypto offers,
+            romance, job offers, links asking to log in. Use what is typical in their country.
             Answer in ${language()}, short sentences a 75-year-old understands. No jargon.
             Return JSON: {"risk":"SAFE"|"SUSPICIOUS"|"SCAM","explanation":"why, max 2 sentences","advice":"what to do, max 2 sentences"}
             Never tell them to click links or share OTPs. If unsure, say SUSPICIOUS.
@@ -98,7 +106,7 @@ object AiHelper {
     suspend fun readMedicine(context: Context, photo: Bitmap): Result<MedicineLabel> = call(context, AiQuota.Kind.READ) {
         val prompt = """
             Read this medicine package or strip. Return JSON:
-            {"name":"brand name and strength, e.g. Dolo 650","dose":"how much per time if printed, else empty","instructions":"one short line in ${language()} from the label, else empty"}
+            {"name":"brand name and strength as printed, e.g. Panadol 500 mg","dose":"how much per time if printed, else empty","instructions":"one short line in ${language()} from the label, else empty"}
             Only use what is printed. Do not give medical advice. If unreadable, return empty strings.
         """.trimIndent() + note()
         val json = JSONObject(model.generateContent(content { image(photo); text(prompt) }).text ?: "{}")

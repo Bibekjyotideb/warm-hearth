@@ -66,6 +66,14 @@ import java.util.TimeZone
 
 private data class Cell(val icon: ImageVector, val tone: Tone, val label: Int, val value: String, val sub: String?)
 
+/** Our /devices page picks the right Amazon store from ?c=GB etc. Other links are left alone. */
+private fun withCountry(url: String, country: String): String {
+    if (!url.contains("warmhearth.lusanetech.com")) return url
+    val base = url.substringBefore('#')
+    val frag = url.substringAfter('#', "")
+    return base + (if ('?' in base) "&" else "?") + "c=" + country + (if (frag.isNotEmpty()) "#$frag" else "")
+}
+
 private fun sleepText(min: Int) = "${min / 60}h ${min % 60}m"
 
 /** One reading in the vitals grid. */
@@ -86,6 +94,9 @@ private fun Reading(modifier: Modifier, icon: ImageVector, tone: Tone, label: St
 @Composable
 fun VitalsCard(d: DeviceState, onOpen: () -> Unit, onShop: () -> Unit, onPaywall: () -> Unit) {
     val v = d.vitals
+    val context = LocalContext.current
+    // Units follow the person reading (a daughter in London sees mmol/L, a son in Delhi mg/dL).
+    val country = remember { com.lusanetech.warmhearth.util.Region.country(context) }
     SectionCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.vitals_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -113,7 +124,7 @@ fun VitalsCard(d: DeviceState, onOpen: () -> Unit, onShop: () -> Unit, onPaywall
                     v.sleepMinutes?.let { add(Cell(Icons.Filled.Bedtime, Tone.Purple, R.string.vt_sleep, sleepText(it), null)) }
                     v.spo2?.let { add(Cell(Icons.Filled.WaterDrop, Tone.Blue, R.string.vt_spo2, "${it.toInt()}%", null)) }
                     if (v.bpSystolic != null && v.bpDiastolic != null) add(Cell(Icons.Filled.MonitorHeart, Tone.Orange, R.string.vt_bp, "${v.bpSystolic}/${v.bpDiastolic}", v.bpAt?.let(::ago)))
-                    v.glucoseMgDl?.let { add(Cell(Icons.Filled.Bloodtype, Tone.Pink, R.string.vt_sugar, "$it mg/dL", v.glucoseAt?.let(::ago))) }
+                    v.glucoseMgDl?.let { add(Cell(Icons.Filled.Bloodtype, Tone.Pink, R.string.vt_sugar, com.lusanetech.warmhearth.util.Region.glucose(it, country), v.glucoseAt?.let(::ago))) }
                 }
                 cells.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 10.dp)) {
@@ -170,7 +181,7 @@ fun VitalsScreen(d: DeviceState, onBack: () -> Unit, onShop: () -> Unit, onPaywa
                             day.hrAvg?.let { stringResource(R.string.vt_hr_avg, it) },
                             day.sleepMinutes?.let { stringResource(R.string.vt_sleep) + " " + sleepText(it) },
                             if (day.bpSystolic != null) "${stringResource(R.string.vt_bp)} ${day.bpSystolic}/${day.bpDiastolic}" else null,
-                            day.glucose?.let { "${stringResource(R.string.vt_sugar)} $it" },
+                            day.glucose?.let { "${stringResource(R.string.vt_sugar)} ${com.lusanetech.warmhearth.util.Region.glucose(it, com.lusanetech.warmhearth.util.Region.country(context))}" },
                         )
                         if (bits.isNotEmpty()) Text(bits.joinToString("  ·  "), style = MaterialTheme.typography.bodySmall, color = Palette.InkSoft, modifier = Modifier.padding(start = 56.dp))
                     }
@@ -211,13 +222,23 @@ fun VitalsScreen(d: DeviceState, onBack: () -> Unit, onShop: () -> Unit, onPaywa
 fun DevicesScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val hindi = Locale.getDefault().language == "hi"
-    val india = TimeZone.getDefault().id.let { it == "Asia/Kolkata" || it == "Asia/Calcutta" } || Locale.getDefault().country == "IN"
+    val country = remember { com.lusanetech.warmhearth.util.Region.country(context) }
+    val india = country == "IN"
+    val money = com.lusanetech.warmhearth.util.Region.money(country)
     val items = remember { RemoteFlags.shop() }
     var tier by remember { mutableStateOf<String?>(null) }
+    fun label(inr: Int, gbp: Int, eur: Int, usd: Int) = stringResource(
+        when (money) {
+            com.lusanetech.warmhearth.util.Region.Money.INR -> inr
+            com.lusanetech.warmhearth.util.Region.Money.GBP -> gbp
+            com.lusanetech.warmhearth.util.Region.Money.EUR -> eur
+            com.lusanetech.warmhearth.util.Region.Money.USD -> usd
+        },
+    )
     val tiers = listOf(
-        "budget" to stringResource(if (india) R.string.tier_budget_in else R.string.tier_budget_intl),
-        "mid" to stringResource(if (india) R.string.tier_mid_in else R.string.tier_mid_intl),
-        "premium" to stringResource(if (india) R.string.tier_premium_in else R.string.tier_premium_intl),
+        "budget" to label(R.string.tier_budget_in, R.string.tier_budget_gb, R.string.tier_budget_eu, R.string.tier_budget_intl),
+        "mid" to label(R.string.tier_mid_in, R.string.tier_mid_gb, R.string.tier_mid_eu, R.string.tier_mid_intl),
+        "premium" to label(R.string.tier_premium_in, R.string.tier_premium_gb, R.string.tier_premium_eu, R.string.tier_premium_intl),
     )
     val featureLabel = mapOf(
         "steps" to R.string.ft_steps, "hr" to R.string.ft_hr, "spo2" to R.string.ft_spo2, "sleep" to R.string.ft_sleep,
@@ -252,7 +273,7 @@ fun DevicesScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(10.dp))
                     SoftButton(stringResource(R.string.see_prices), Tone.Brand, icon = Icons.Filled.OpenInNew, minHeight = 50.dp) {
                         com.lusanetech.warmhearth.util.Telemetry.event(context, "shop_click", "item" to item.id)
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(if (india) item.urlIn else item.urlIntl)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(withCountry(if (india) item.urlIn else item.urlIntl, country))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                     }
                 }
             }
